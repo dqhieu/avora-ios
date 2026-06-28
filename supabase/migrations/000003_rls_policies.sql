@@ -19,13 +19,12 @@ create view public.styles_public
   select id, name, sample_image_path, active from public.styles where active = true;
 grant select on public.styles_public to authenticated, anon;
 
--- styles_public must bypass styles RLS for the selected columns:
--- security_invoker view + a read policy scoped to non-secret usage:
+-- Row-level policy permits all rows; column-level GRANTs (below) restrict which columns are visible.
 create policy styles_public_read on public.styles
   for select to authenticated, anon using (true);
 -- revoke direct column access to prompt_template via column privileges:
 revoke all on public.styles from authenticated, anon;
-grant select (id, name, sample_image_path, active, default_size, default_quality)
+grant select (id, name, sample_image_path, active)
   on public.styles to authenticated, anon;
 
 insert into storage.buckets (id, name, public) values
