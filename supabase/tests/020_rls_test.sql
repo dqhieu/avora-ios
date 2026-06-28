@@ -2,12 +2,10 @@ begin;
 select plan(6);
 
 -- seed two users + their data as superuser
+-- (profiles auto-created by trigger)
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'a@test.dev'),
   ('22222222-2222-2222-2222-222222222222', 'b@test.dev');
-insert into public.profiles (id) values
-  ('11111111-1111-1111-1111-111111111111'),
-  ('22222222-2222-2222-2222-222222222222');
 insert into public.styles (id, name, prompt_template) values ('s1','Style 1','SECRET');
 insert into public.generations (id, user_id, style_id, charged_bucket, charged_amount, input_path, quality)
   values ('aaaaaaaa-0000-0000-0000-000000000001',
