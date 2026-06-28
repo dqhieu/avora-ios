@@ -19,32 +19,49 @@ Deno.serve(async (req) => {
 
   const db = serviceClient();
 
-  // idempotency: ledger insert; if it already exists, we've processed this event
-  const kind = type === "NON_RENEWING_PURCHASE" ? "extra_pack"
-             : type === "INITIAL_PURCHASE" ? "initial"
-             : type === "RENEWAL" ? "renewal" : "other";
-  if (kind !== "other") {
-    const { error: dupe } = await db.from("purchases")
-      .insert({ transaction_id: txId, user_id: uid, kind });
-    if (dupe) {
-      if (dupe.code === "23505") return json({ ok: true, deduped: true });  // PK conflict => already done
-      return json({ error: "ledger_failed" }, 500);  // transient/unexpected error => let RC retry
-    }
-  }
-
   if (type === "INITIAL_PURCHASE" || type === "RENEWAL") {
     const periodEnd = ev.expiration_at_ms ? new Date(ev.expiration_at_ms).toISOString() : null;
-    await db.from("profiles").update({
-      weekly_credits: 1000, subscription_period_end: periodEnd, subscription_active: true,
-    }).eq("id", uid);
+    const kind = type === "INITIAL_PURCHASE" ? "initial" : "renewal";
+
+    // apply_purchase does ledger insert + profile grant atomically.
+    // If DB errors: return 500 so RevenueCat retries; the txn rolled back, no partial state.
+    // If deduped: idempotent OK.
+    const { data: result, error: rpcErr } = await db.rpc("apply_purchase", {
+      p_tx:          txId,
+      p_uid:         uid,
+      p_kind:        kind,
+      p_weekly_set:  1000,
+      p_extra_delta: 0,
+      p_period_end:  periodEnd,
+    });
+    if (rpcErr) return json({ error: "purchase_failed" }, 500);
+    if (result === "deduped") return json({ ok: true, deduped: true });
+    return json({ ok: true });
+
   } else if (type === "NON_RENEWING_PURCHASE") {
-    await db.rpc("grant_extra", { p_uid: uid, p_amount: 500 });
+    const { data: result, error: rpcErr } = await db.rpc("apply_purchase", {
+      p_tx:          txId,
+      p_uid:         uid,
+      p_kind:        "extra_pack",
+      p_weekly_set:  0,
+      p_extra_delta: 500,
+      p_period_end:  null,
+    });
+    if (rpcErr) return json({ error: "purchase_failed" }, 500);
+    if (result === "deduped") return json({ ok: true, deduped: true });
+    return json({ ok: true });
+
   } else if (type === "CANCELLATION") {
     // Grace period: entitlement honored until Apple's expiry — stay active.
-    await db.from("profiles").update({ subscription_active: true }).eq("id", uid);
+    const { error: upErr } = await db.from("profiles")
+      .update({ subscription_active: true }).eq("id", uid);
+    if (upErr) return json({ error: "update_failed" }, 500);
+
   } else if (type === "EXPIRATION") {
     // Period ended: deactivate and zero the weekly bucket (extra credits survive).
-    await db.from("profiles").update({ subscription_active: false, weekly_credits: 0 }).eq("id", uid);
+    const { error: upErr } = await db.from("profiles")
+      .update({ subscription_active: false, weekly_credits: 0 }).eq("id", uid);
+    if (upErr) return json({ error: "update_failed" }, 500);
   }
 
   return json({ ok: true });

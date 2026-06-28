@@ -58,7 +58,9 @@ Deno.serve(async (req) => {
   await db.rpc("lazy_weekly_reset", { p_uid: uid });
   const { data: bucket, error: deductErr } = await db.rpc("deduct_credit", { p_uid: uid });
   if (deductErr) {
-    if (deductErr.message.includes("insufficient_credits"))
+    // Key on SQLSTATE P0001 first (raised by deduct_credit for insufficient_credits);
+    // fall back to message substring for safety.
+    if (deductErr.code === "P0001" || deductErr.message.includes("insufficient_credits"))
       return json({ error: "insufficient_credits" }, 402);
     return json({ error: "deduct_failed" }, 500);
   }
@@ -72,7 +74,9 @@ Deno.serve(async (req) => {
     // compensate: refund directly since no row persisted — re-credit the charged bucket.
     try {
       await db.rpc("refund_credit_direct", { p_uid: uid, p_bucket: bucket, p_amount: 25 });
-    } catch { /* best-effort */ }
+    } catch (refundErr) {
+      console.error("compensating refund failed", { uid, bucket, error: refundErr });
+    }
     return json({ error: "insert_failed" }, 500);
   }
 
