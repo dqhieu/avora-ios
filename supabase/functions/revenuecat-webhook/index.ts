@@ -26,7 +26,10 @@ Deno.serve(async (req) => {
   if (kind !== "other") {
     const { error: dupe } = await db.from("purchases")
       .insert({ transaction_id: txId, user_id: uid, kind });
-    if (dupe) return json({ ok: true, deduped: true });  // PK conflict => already done
+    if (dupe) {
+      if (dupe.code === "23505") return json({ ok: true, deduped: true });  // PK conflict => already done
+      return json({ error: "ledger_failed" }, 500);  // transient/unexpected error => let RC retry
+    }
   }
 
   if (type === "INITIAL_PURCHASE" || type === "RENEWAL") {
@@ -36,9 +39,12 @@ Deno.serve(async (req) => {
     }).eq("id", uid);
   } else if (type === "NON_RENEWING_PURCHASE") {
     await db.rpc("grant_extra", { p_uid: uid, p_amount: 500 });
-  } else if (type === "CANCELLATION" || type === "EXPIRATION") {
-    await db.from("profiles").update({ subscription_active: type !== "EXPIRATION" })
-      .eq("id", uid);
+  } else if (type === "CANCELLATION") {
+    // Grace period: entitlement honored until Apple's expiry — stay active.
+    await db.from("profiles").update({ subscription_active: true }).eq("id", uid);
+  } else if (type === "EXPIRATION") {
+    // Period ended: deactivate and zero the weekly bucket (extra credits survive).
+    await db.from("profiles").update({ subscription_active: false, weekly_credits: 0 }).eq("id", uid);
   }
 
   return json({ ok: true });
