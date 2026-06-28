@@ -1,0 +1,38 @@
+begin;
+select plan(4);
+
+-- seed two users + their data as superuser
+insert into auth.users (id, email) values
+  ('11111111-1111-1111-1111-111111111111', 'a@test.dev'),
+  ('22222222-2222-2222-2222-222222222222', 'b@test.dev');
+insert into public.profiles (id) values
+  ('11111111-1111-1111-1111-111111111111'),
+  ('22222222-2222-2222-2222-222222222222');
+insert into public.styles (id, name, prompt_template) values ('s1','Style 1','SECRET');
+insert into public.generations (id, user_id, style_id, charged_bucket, charged_amount, input_path, quality)
+  values ('aaaaaaaa-0000-0000-0000-000000000001',
+          '11111111-1111-1111-1111-111111111111','s1','extra',25,'in/a.png','medium');
+
+-- act as user A
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+
+select is(
+  (select count(*)::int from public.generations),
+  1, 'user A sees only their own generation');
+
+select is(
+  (select count(*)::int from public.generations
+     where user_id = '22222222-2222-2222-2222-222222222222'),
+  0, 'user A cannot see user B generations');
+
+select is(
+  (select count(*)::int from public.styles_public where id = 's1'),
+  1, 'user A can read styles_public');
+
+select throws_ok(
+  $$ select prompt_template from public.styles where id = 's1' $$,
+  '42501', null, 'user A cannot read prompt_template from base styles');
+
+select * from finish();
+rollback;
