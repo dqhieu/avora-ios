@@ -89,7 +89,10 @@ insert into public.credit_config (weekly_amount, signup_extra, generation_cost, 
   values (1000, 50, 20, 500);
 
 -- These four numbers are user-facing economics, so clients may read them.
+-- Revoke the broad default grants first so clients get SELECT only (writes are
+-- also blocked by RLS having no write policy).
 alter table public.credit_config enable row level security;
+revoke all on public.credit_config from authenticated, anon;
 create policy credit_config_read on public.credit_config
   for select to authenticated, anon using (true);
 grant select on public.credit_config to authenticated, anon;
@@ -136,7 +139,7 @@ Replace the entire contents of `supabase/tests/030_credit_rpcs_test.sql` with:
 
 ```sql
 begin;
-select plan(11);
+select plan(10);
 
 insert into auth.users (id, email) values ('44444444-4444-4444-4444-444444444444','d@test.dev');
 -- profile auto-created with extra=50 (from config), weekly=0
