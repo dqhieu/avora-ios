@@ -26,11 +26,20 @@ struct CreateView: View {
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
-            previewArea
+            if resultPath == nil {
+                PhotosPicker(selection: $pickerItem, matching: .images) {
+                    previewArea
+                }
+                .buttonStyle(.plain)
+                .disabled(isWorking)
+            } else {
+                previewArea
+            }
             controls
         }
         .padding(Spacing.lg)
         .navigationTitle(style.name)
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
         .onChange(of: pickerItem) { _, item in Task { await loadPicked(item) } }
         .onChange(of: poller.phase) { _, phase in Task { await handlePhase(phase) } }
@@ -84,13 +93,13 @@ struct CreateView: View {
                 .tint(Color.avoraAccent)
             }
         } else {
-            PhotosPicker(selection: $pickerItem, matching: .images) {
-                Label(sourceImage == nil ? "Choose Photo" : "Change Photo", systemImage: "photo")
-            }
-            .buttonStyle(.bordered)
-            .tint(Color.avoraAccent)
             AvoraPrimaryButton { Task { await generate() } } label: {
-                Label("Generate", systemImage: "wand.and.stars")
+                VStack(spacing: Spacing.xs) {
+                    Label("Generate", systemImage: "wand.and.stars")
+                    Text("\(app.config.generationCost) credits")
+                        .font(.avoraCaption)
+                        .opacity(0.85)
+                }
             }
             .disabled(sourceImage == nil || isWorking)
         }

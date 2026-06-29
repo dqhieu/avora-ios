@@ -11,7 +11,7 @@ enum AppearanceConfigurator {
             appearance.largeTitleTextAttributes[.font] =
                 UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: largeTitle)
         }
-        if let inlineTitle = UIFont(name: "CormorantGaramond-SemiBold", size: 17) {
+        if let inlineTitle = UIFont(name: "CormorantGaramond-SemiBold", size: 20) {
             appearance.titleTextAttributes[.font] =
                 UIFontMetrics(forTextStyle: .headline).scaledFont(for: inlineTitle)
         }
