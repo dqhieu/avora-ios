@@ -85,4 +85,10 @@ struct AvoraAPI {
     func signedOutputURL(_ path: String) async throws -> URL {
         try await db.storage.from("outputs").createSignedURL(path: path, expiresIn: 3600)
     }
+
+    func deleteAccount() async throws {
+        let _: [String: Bool] = try await db.functions
+            .invoke("delete-account", options: .init(method: .post))
+        try await db.auth.signOut()
+    }
 }

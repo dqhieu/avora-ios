@@ -74,6 +74,7 @@ struct LoginView: View {
             defer { isLoading = false }
             do {
                 try await AuthService.signInWithApple(presentationAnchor: window)
+                await app.configureRevenueCat()
                 await app.refreshProfile()
                 app.isAuthenticated = true
             } catch {

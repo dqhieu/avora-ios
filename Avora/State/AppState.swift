@@ -10,11 +10,19 @@ final class AppState {
     func bootstrap() async {
         let session = try? await SupabaseClientProvider.client.auth.session
         isAuthenticated = session != nil
-        if isAuthenticated { await refreshProfile() }
+        if isAuthenticated {
+            await configureRevenueCat()
+            await refreshProfile()
+        }
     }
 
     func refreshProfile() async {
         profile = try? await AvoraAPI.shared.fetchProfile()
+    }
+
+    func configureRevenueCat() async {
+        guard let session = try? await SupabaseClientProvider.client.auth.session else { return }
+        AvoraPurchases.configure(appUserID: session.user.id.uuidString)
     }
 
     func signOut() async {
