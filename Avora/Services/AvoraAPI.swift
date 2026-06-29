@@ -5,6 +5,7 @@ enum AvoraError: Error { case insufficientCredits, unauthorized, server(Int) }
 
 struct AvoraAPI {
     static let shared = AvoraAPI()
+    private static let iso8601 = ISO8601DateFormatter()
     private var db: SupabaseClient { SupabaseClientProvider.client }
 
     func currentUserId() async throws -> UUID {
@@ -69,7 +70,7 @@ struct AvoraAPI {
         let baseQuery = db.from("generations")
             .select("id,style_id,status,output_path,created_at")
         let filtered = cursor.map { c in
-            baseQuery.lt("created_at", value: ISO8601DateFormatter().string(from: c))
+            baseQuery.lt("created_at", value: AvoraAPI.iso8601.string(from: c))
         } ?? baseQuery
         let all: [Generation] = try await filtered
             .order("created_at", ascending: false)
