@@ -12,8 +12,13 @@ struct StylesGridView: View {
                 HStack {
                     Label("\(p.totalCredits) credits", systemImage: "sparkles")
                     Spacer()
-                    Text("\(p.totalGenerations) generations").foregroundStyle(.secondary)
-                }.padding(.horizontal).font(.avoraSubheadline.monospacedDigit())
+                    Text("\(p.totalGenerations) generations")
+                        .foregroundStyle(Color.avoraTextSecondary)
+                }
+                .font(.avoraSubheadline.monospacedDigit())
+                .padding(Spacing.md)
+                .avoraElevatedSurface(cornerRadius: Radius.md)
+                .padding(.horizontal, Spacing.lg)
             }
             LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(styles) { style in
@@ -59,13 +64,22 @@ private struct StyleCard: View {
     let style: Style
     var body: some View {
         VStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.secondary.opacity(0.15))
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                .fill(LinearGradient.avoraSurfaceGradient)
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
-                    Image(systemName: "photo").font(.avoraLargeTitle).foregroundStyle(.secondary)
+                    Image(systemName: "photo")
+                        .font(.avoraLargeTitle)
+                        .foregroundStyle(Color.avoraTextTertiary)
                 }
-            Text(style.name).font(.avoraHeadline).padding(.top, 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                        .strokeBorder(Color.avoraBorderHighlight, lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.4), radius: 12, y: 6)
+            Text(style.name)
+                .font(.avoraHeadline)
+                .padding(.top, Spacing.xs)
         }
     }
 }

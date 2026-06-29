@@ -13,11 +13,11 @@ struct CreateView: View {
     @State private var isSubmitting = false
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.lg) {
             previewArea
             controls
         }
-        .padding()
+        .padding(Spacing.lg)
         .navigationTitle(style.name)
         .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
         .onChange(of: pickerItem) { _, item in Task { await loadPicked(item) } }
@@ -32,13 +32,17 @@ struct CreateView: View {
             } else if let sourceImage {
                 Image(uiImage: sourceImage).resizable().scaledToFit().opacity(isWorking ? 0.4 : 1)
             } else {
-                RoundedRectangle(cornerRadius: 16).fill(.secondary.opacity(0.12))
-                    .overlay { Text("Pick a photo to start").foregroundStyle(.secondary) }
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .fill(Color.avoraSurface)
+                    .overlay {
+                        Text("Pick a photo to start")
+                            .foregroundStyle(Color.avoraTextSecondary)
+                    }
             }
             if isWorking {
                 ProgressView("Generating…")
-                    .padding()
-                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 12))
+                    .padding(Spacing.lg)
+                    .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
             }
         }
         .frame(maxWidth: .infinity)
@@ -51,24 +55,27 @@ struct CreateView: View {
                     Label("Save", systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(Color.avoraAccent)
                 Button { reset() } label: {
                     Label("Generate again", systemImage: "arrow.clockwise")
                 }
                 .buttonStyle(.bordered)
+                .tint(Color.avoraAccent)
             }
         } else {
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Label(sourceImage == nil ? "Choose Photo" : "Change Photo", systemImage: "photo")
             }
             .buttonStyle(.bordered)
+            .tint(Color.avoraAccent)
             Button { Task { await generate() } } label: {
-                Label("Generate", systemImage: "wand.and.stars").frame(maxWidth: .infinity)
+                Label("Generate", systemImage: "wand.and.stars")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(AvoraPrimaryButtonStyle())
             .disabled(sourceImage == nil || isWorking)
         }
         if let errorText {
-            Text(errorText).foregroundStyle(.red).font(.avoraFootnote)
+            Text(errorText).foregroundStyle(Color.avoraError).font(.avoraFootnote)
         }
     }
 

@@ -20,7 +20,7 @@ struct PaywallView: View {
                                     Text(pkg.storeProduct.localizedTitle).font(.avoraHeadline)
                                     Text(pkg.storeProduct.localizedDescription)
                                         .font(.avoraCaption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.avoraTextSecondary)
                                 }
                                 Spacer()
                                 Text(pkg.storeProduct.localizedPriceString).font(.avoraHeadline.monospacedDigit())
@@ -30,6 +30,9 @@ struct PaywallView: View {
                     }
                 }
             }
+            .listRowBackground(Color.avoraSurface)
+            .scrollContentBackground(.hidden)
+            .presentationBackground(.thinMaterial)
             .navigationTitle("Credits")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
