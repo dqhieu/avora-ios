@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CollectionView: View {
     @Environment(AppState.self) private var app
@@ -12,7 +13,7 @@ struct CollectionView: View {
         ScrollView {
             LazyVGrid(columns: cols, spacing: Spacing.sm) {
                 ForEach(items.filter { $0.status == .completed && $0.outputPath != nil }) { gen in
-                    NavigationLink(value: ImageRoute(path: gen.outputPath!)) {
+                    NavigationLink(value: gen) {
                         Thumb(path: gen.outputPath!)
                     }.buttonStyle(.plain)
                     .onAppear {
@@ -22,7 +23,8 @@ struct CollectionView: View {
             }.padding(Spacing.sm)
         }
         .navigationTitle("Collection")
-        .navigationDestination(for: ImageRoute.self) { FullImageView(path: $0.path) }
+        .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
+        .navigationDestination(for: Style.self) { CreateView(style: $0) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
@@ -69,11 +71,55 @@ private struct Thumb: View {
     }
 }
 
-private struct FullImageView: View {
-    let path: String
+private struct CreationDetailView: View {
+    let generation: Generation
+    @Environment(AppState.self) private var app
+    @State private var style: Style?
+    @State private var saved = false
+
     var body: some View {
-        RemoteImage(path: path, contentMode: .fit)
-            .navigationTitle("Creation")
-            .navigationBarTitleDisplayMode(.inline)
+        VStack(spacing: Spacing.lg) {
+            if let path = generation.outputPath {
+                RemoteImage(path: path, contentMode: .fit)
+            }
+            controls
+        }
+        .padding(Spacing.lg)
+        .frame(maxHeight: .infinity)
+        .navigationTitle(style?.name ?? "Creation")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await resolveStyle() }
+    }
+
+    @ViewBuilder private var controls: some View {
+        if let style {
+            NavigationLink(value: style) {
+                Label("Create with this style", systemImage: "wand.and.stars")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.avoraAccent)
+        }
+        Button { Task { await save() } } label: {
+            Label(saved ? "Saved to Photos" : "Save to Photos",
+                  systemImage: saved ? "checkmark" : "square.and.arrow.down")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .tint(Color.avoraAccent)
+        .disabled(saved)
+    }
+
+    private func resolveStyle() async {
+        guard let styleId = generation.styleId else { return }
+        try? await app.loadStyles()
+        style = app.style(id: styleId)
+    }
+
+    private func save() async {
+        guard let path = generation.outputPath,
+              let img = try? await ImageStore.shared.image(for: path) else { return }
+        UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
+        saved = true
     }
 }

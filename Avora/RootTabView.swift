@@ -1,11 +1,5 @@
 import SwiftUI
 
-// Value-based route so each tab's NavigationStack path reflects the current
-// push depth. Binding the tab bar's visibility to `path.isEmpty` then lets it
-// animate out on push and back in on pop together with the navigation
-// transition, instead of reappearing after the transition completes.
-struct ImageRoute: Hashable { let path: String }
-
 struct RootTabView: View {
     var body: some View {
         TabView {
@@ -17,6 +11,10 @@ struct RootTabView: View {
     }
 }
 
+// Each tab owns its NavigationPath so the tab bar's visibility can be bound to
+// push depth. Driving it from `path.isEmpty` lets the bar animate out on push
+// and back in on pop together with the transition, instead of reappearing only
+// after the back transition completes.
 private struct StylesTab: View {
     @State private var path = NavigationPath()
     var body: some View {

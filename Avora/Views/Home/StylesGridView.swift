@@ -2,7 +2,6 @@ import SwiftUI
 
 struct StylesGridView: View {
     @Environment(AppState.self) private var app
-    @State private var styles: [Style] = []
     @State private var loadError = false
     @State private var showSettings = false
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
@@ -10,19 +9,19 @@ struct StylesGridView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: cols, spacing: 12) {
-                ForEach(styles) { style in
+                ForEach(app.styles) { style in
                     NavigationLink(value: style) { StyleCard(style: style) }
                         .buttonStyle(.plain)
                 }
             }.padding()
 
-            if loadError && styles.isEmpty {
+            if loadError && app.styles.isEmpty {
                 ContentUnavailableView {
                     Label("Couldn’t load styles", systemImage: "exclamationmark.triangle")
                 } description: {
                     Text("Check your connection and try again.")
                 } actions: {
-                    Button("Retry") { Task { await load() } }
+                    Button("Retry") { Task { await load(force: true) } }
                 }
                 .padding(.top, 40)
             }
@@ -38,13 +37,13 @@ struct StylesGridView: View {
         }
         .navigationDestination(for: Style.self) { CreateView(style: $0) }
         .task { await load() }
-        .refreshable { await load() }
+        .refreshable { await load(force: true) }
     }
 
-    private func load() async {
+    private func load(force: Bool = false) async {
         loadError = false
         do {
-            styles = try await AvoraAPI.shared.fetchStyles()
+            try await app.loadStyles(force: force)
             await app.refreshProfile()
         } catch {
             loadError = true

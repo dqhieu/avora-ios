@@ -8,6 +8,9 @@ final class AppState {
     // frame already shows the right screen — no waiting on bootstrap().
     var isAuthenticated = SupabaseClientProvider.client.auth.currentSession != nil
     var profile: Profile?
+    // Cached for the session so screens that need styles (grid, creation detail)
+    // share one fetch. Pull-to-refresh on the grid passes force: true.
+    var styles: [Style] = []
 
     var userEmail: String? {
         SupabaseClientProvider.client.auth.currentUser?.email
@@ -28,6 +31,15 @@ final class AppState {
 
     func refreshProfile() async {
         profile = try? await AvoraAPI.shared.fetchProfile()
+    }
+
+    func loadStyles(force: Bool = false) async throws {
+        if !force, !styles.isEmpty { return }
+        styles = try await AvoraAPI.shared.fetchStyles()
+    }
+
+    func style(id: String) -> Style? {
+        styles.first { $0.id == id }
     }
 
     func configureRevenueCat() async {
