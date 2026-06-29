@@ -68,6 +68,7 @@ private struct StyleCard: View {
     private var tile: some View {
         let shape = RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
         let content = Color.clear
+            .contentShape(.rect)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
                 Image(systemName: "photo")
