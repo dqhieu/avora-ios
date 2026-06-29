@@ -10,6 +10,7 @@ struct CreateView: View {
     @State private var resultURL: URL?
     @State private var showPaywall = false
     @State private var errorText: String?
+    @State private var isSubmitting = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -21,6 +22,7 @@ struct CreateView: View {
         .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
         .onChange(of: pickerItem) { _, item in Task { await loadPicked(item) } }
         .onChange(of: poller.phase) { _, phase in Task { await handlePhase(phase) } }
+        .onDisappear { poller.stop() }
     }
 
     @ViewBuilder private var previewArea: some View {
@@ -71,6 +73,7 @@ struct CreateView: View {
     }
 
     private var isWorking: Bool {
+        if isSubmitting { return true }
         if case .working = poller.phase { return true }
         return false
     }
@@ -84,7 +87,9 @@ struct CreateView: View {
     }
 
     private func generate() async {
-        guard let img = sourceImage else { return }
+        guard let img = sourceImage, !isSubmitting else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
         errorText = nil
         do {
             let data = ImageNormalizer.normalize(img)
@@ -101,7 +106,11 @@ struct CreateView: View {
     private func handlePhase(_ phase: GenerationPoller.Phase) async {
         switch phase {
         case .done(let path):
-            resultURL = try? await AvoraAPI.shared.signedOutputURL(path)
+            do {
+                resultURL = try await AvoraAPI.shared.signedOutputURL(path)
+            } catch {
+                errorText = "Generation finished but the result couldn’t be loaded. Pull to refresh in your Collection."
+            }
             await app.refreshProfile()
         case .failed:
             errorText = "This photo couldn't be generated. Your credit was refunded."
