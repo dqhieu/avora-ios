@@ -5,13 +5,9 @@ struct Style: Codable, Identifiable, Hashable {
     let name: String
     let sampleImagePath: String?
     let active: Bool
-}
 
-extension JSONDecoder {
-    static let avora: JSONDecoder = {
-        let d = JSONDecoder()
-        d.keyDecodingStrategy = .convertFromSnakeCase
-        d.dateDecodingStrategy = .iso8601
-        return d
-    }()
+    enum CodingKeys: String, CodingKey {
+        case id, name, active
+        case sampleImagePath = "sample_image_path"
+    }
 }
