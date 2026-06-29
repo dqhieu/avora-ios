@@ -17,13 +17,13 @@ struct PaywallView: View {
                         } label: {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text(pkg.storeProduct.localizedTitle)
+                                    Text(pkg.storeProduct.localizedTitle).font(.avoraHeadline)
                                     Text(pkg.storeProduct.localizedDescription)
-                                        .font(.caption)
+                                        .font(.avoraCaption)
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(pkg.storeProduct.localizedPriceString).bold()
+                                Text(pkg.storeProduct.localizedPriceString).font(.avoraHeadline.monospacedDigit())
                             }
                         }
                         .disabled(busy)

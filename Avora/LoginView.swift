@@ -55,7 +55,7 @@ struct LoginView: View {
             } else {
                 Text("Sign in with Apple")
                     .foregroundStyle(.black)
-                    .font(.headline.weight(.semibold))
+                    .font(.avoraButton)
                     .frame(maxWidth: .infinity, minHeight: 56)
                     .contentShape(.capsule)
             }
