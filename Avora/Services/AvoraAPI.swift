@@ -33,6 +33,14 @@ struct AvoraAPI {
             .value
     }
 
+    func fetchCreditConfig() async throws -> CreditConfig {
+        try await db.from("credit_config")
+            .select("weekly_amount,signup_extra,generation_cost,extra_pack")
+            .single()
+            .execute()
+            .value
+    }
+
     func uploadInput(_ data: Data) async throws -> String {
         let uid = try await currentUserId()
         let path = "\(uid.uuidString.lowercased())/\(UUID().uuidString).png"

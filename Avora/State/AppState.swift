@@ -11,6 +11,9 @@ final class AppState {
     // Cached for the session so screens that need styles (grid, creation detail)
     // share one fetch. Pull-to-refresh on the grid passes force: true.
     var styles: [Style] = []
+    // Credit economics fetched from the backend; seeded with fallback defaults
+    // so the first frame and offline sessions still work.
+    var config: CreditConfig = .fallback
 
     var userEmail: String? {
         SupabaseClientProvider.client.auth.currentUser?.email
@@ -22,6 +25,7 @@ final class AppState {
             isAuthenticated = true
             await configureRevenueCat()
             await refreshProfile()
+            await loadConfig()
         } else if SupabaseClientProvider.client.auth.currentSession == nil {
             // No persisted session at all → definitely logged out. A failed
             // refresh with a cached session (e.g. offline) stays optimistic.
@@ -31,6 +35,17 @@ final class AppState {
 
     func refreshProfile() async {
         profile = try? await AvoraAPI.shared.fetchProfile()
+    }
+
+    func loadConfig() async {
+        if let fetched = try? await AvoraAPI.shared.fetchCreditConfig() {
+            config = fetched
+        }
+    }
+
+    /// Number of generations buyable with `credits`, using the live config cost.
+    func generations(for credits: Int) -> Int {
+        credits / config.generationCost
     }
 
     func loadStyles(force: Bool = false) async throws {
