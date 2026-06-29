@@ -1,0 +1,59 @@
+import SwiftUI
+
+struct StylesGridView: View {
+    @Environment(AppState.self) private var app
+    @State private var styles: [Style] = []
+    @State private var loadError = false
+    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+
+    var body: some View {
+        ScrollView {
+            if let p = app.profile {
+                HStack {
+                    Label("\(p.totalCredits) credits", systemImage: "sparkles")
+                    Spacer()
+                    Text("\(p.totalGenerations) generations").foregroundStyle(.secondary)
+                }.padding(.horizontal).font(.subheadline)
+            }
+            LazyVGrid(columns: cols, spacing: 12) {
+                ForEach(styles) { style in
+                    NavigationLink(value: style) { StyleCard(style: style) }
+                        .buttonStyle(.plain)
+                }
+            }.padding()
+        }
+        .navigationTitle("Avora")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
+            }
+        }
+        .navigationDestination(for: Style.self) { CreateView(style: $0) }
+        .task { await load() }
+        .refreshable { await load() }
+    }
+
+    private func load() async {
+        do {
+            styles = try await AvoraAPI.shared.fetchStyles()
+            await app.refreshProfile()
+        } catch {
+            loadError = true
+        }
+    }
+}
+
+private struct StyleCard: View {
+    let style: Style
+    var body: some View {
+        VStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.secondary.opacity(0.15))
+                .aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    Image(systemName: "photo").font(.largeTitle).foregroundStyle(.secondary)
+                }
+            Text(style.name).font(.subheadline).bold().padding(.top, 4)
+        }
+    }
+}

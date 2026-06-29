@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Placeholder — replaced by Task 7 with the real tab bar.
 struct RootTabView: View {
     var body: some View {
-        NavigationStack {
-            Text("Signed in")
-                .navigationTitle("Avora")
+        TabView {
+            NavigationStack { StylesGridView() }
+                .tabItem { Label("Create", systemImage: "wand.and.stars") }
+            NavigationStack { CollectionView() }
+                .tabItem { Label("Collection", systemImage: "square.grid.2x2") }
         }
     }
 }
