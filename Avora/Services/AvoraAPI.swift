@@ -15,8 +15,9 @@ struct AvoraAPI {
 
     func fetchStyles() async throws -> [Style] {
         try await db.from("styles_public")
-            .select("id,name,sample_image_path,active")
+            .select("id,name,sample_image_path,active,sort_order")
             .eq("active", value: true)
+            .order("sort_order")
             .order("name")
             .execute()
             .value
