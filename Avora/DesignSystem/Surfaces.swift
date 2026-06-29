@@ -24,20 +24,44 @@ extension View {
     }
 }
 
-/// Primary action button: Liquid Glass prominent on iOS 26+, white-fill capsule on 18–25.
+/// Primary action button: clear Liquid Glass on iOS 26+, translucent material capsule on 18–25.
 struct AvoraPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let label = configuration.label
             .font(.avoraButton)
             .foregroundStyle(Color.avoraOnAccent)
-            .frame(maxWidth: .infinity, minHeight: 52)
+            .frame(maxWidth: .infinity, minHeight: 56)
             .opacity(configuration.isPressed ? 0.85 : 1)
 
         if #available(iOS 26.0, *) {
-            return AnyView(label.glassEffect(.regular.tint(Color.avoraAccent).interactive(), in: .capsule))
+            return AnyView(label.glassEffect(.regular.interactive(), in: .capsule))
         } else {
-            return AnyView(label.background(Color.avoraAccent, in: Capsule()))
+            return AnyView(
+                label
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay { Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 1) }
+                    .scaleEffect(configuration.isPressed ? 0.97 : 1)
+                    .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+            )
         }
+    }
+}
+
+/// Primary action button wrapper: applies `AvoraPrimaryButtonStyle` and pins the light
+/// color scheme so the clear glass reads correctly over light backgrounds.
+struct AvoraPrimaryButton<Label: View>: View {
+    private let action: () -> Void
+    @ViewBuilder private let label: () -> Label
+
+    init(action: @escaping () -> Void, @ViewBuilder label: @escaping () -> Label) {
+        self.action = action
+        self.label = label
+    }
+
+    var body: some View {
+        Button(action: action, label: label)
+            .buttonStyle(AvoraPrimaryButtonStyle())
+            .preferredColorScheme(.light)
     }
 }
 

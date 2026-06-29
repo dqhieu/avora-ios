@@ -18,44 +18,25 @@ struct LoginView: View {
                 Spacer()
                 loginButton
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 32)
             .padding(.bottom, 28)
         }
     }
 
-    @ViewBuilder
     private var loginButton: some View {
-        if #available(iOS 26.0, *) {
-            Button(action: logIn) {
-                loginButtonLabel
-            }
-            .buttonStyle(.glassProminent)
-            .tint(Color.clear)
-            .disabled(isLoading)
-        } else {
-            Button(action: logIn) {
-                loginButtonLabel
-            }
-            .buttonStyle(.plain)
-            .background(.ultraThinMaterial, in: Capsule())
-            .overlay { Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 1) }
-            .disabled(isLoading)
+        AvoraPrimaryButton(action: logIn) {
+            loginButtonLabel
         }
+        .disabled(isLoading)
     }
 
+    @ViewBuilder
     private var loginButtonLabel: some View {
-        Group {
-            if isLoading {
-                ProgressView()
-                    .tint(Color.avoraOnAccent)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-            } else {
-                Label("Sign in with Apple", systemImage: "apple.logo")
-                    .foregroundStyle(Color.avoraOnAccent)
-                    .font(.avoraButton)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-                    .contentShape(.capsule)
-            }
+        if isLoading {
+            ProgressView()
+                .tint(Color.avoraOnAccent)
+        } else {
+            Label("Sign in with Apple", systemImage: "apple.logo")
         }
     }
 

@@ -69,10 +69,9 @@ struct CreateView: View {
             }
             .buttonStyle(.bordered)
             .tint(Color.avoraAccent)
-            Button { Task { await generate() } } label: {
+            AvoraPrimaryButton { Task { await generate() } } label: {
                 Label("Generate", systemImage: "wand.and.stars")
             }
-            .buttonStyle(AvoraPrimaryButtonStyle())
             .disabled(sourceImage == nil || isWorking)
         }
         if let errorText {
