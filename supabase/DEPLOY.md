@@ -4,9 +4,13 @@
 supabase secrets set OPENAI_API_KEY=sk-...
 supabase secrets set REVENUECAT_WEBHOOK_TOKEN=...
 
-## Database settings for cron worker pump (pg_net target)
-alter database postgres set "app.functions_url"   = 'https://<ref>.supabase.co/functions/v1';
-alter database postgres set "app.service_role_key" = '<service_role_key>';
+## Cron worker pump target (Supabase Vault)
+# Hosted Supabase forbids `alter database ... set` for custom GUCs, so the
+# worker pump reads its target from Vault (see migration 000014). Create these
+# two secrets once via the SQL editor (run each exactly once):
+select vault.create_secret('https://<ref>.supabase.co/functions/v1', 'project_url');
+select vault.create_secret('<service_role_key>', 'service_role_key');
+# To change a value later, use vault.update_secret(<uuid>, '<new value>').
 
 ## Deploy functions
 supabase functions deploy submit-generation get-generation list-generations process-queue revenuecat-webhook
