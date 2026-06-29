@@ -24,8 +24,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		471C58E32FEEC9B60025C317 /* Avora */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Avora;
 			sourceTree = "<group>";
 		};
