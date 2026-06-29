@@ -13,7 +13,7 @@ select vault.create_secret('<service_role_key>', 'service_role_key');
 # To change a value later, use vault.update_secret(<uuid>, '<new value>').
 
 ## Deploy functions
-supabase functions deploy submit-generation get-generation list-generations process-queue revenuecat-webhook
+supabase functions deploy submit-generation get-generation list-generations process-queue revenuecat-webhook delete-account
 
 ## Apply migrations
 supabase db push
