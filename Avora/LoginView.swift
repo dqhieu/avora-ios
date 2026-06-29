@@ -50,7 +50,7 @@ struct LoginView: View {
                     .tint(Color.avoraOnAccent)
                     .frame(maxWidth: .infinity, minHeight: 56)
             } else {
-                Text("Sign in with Apple")
+                Label("Sign in with Apple", systemImage: "apple.logo")
                     .foregroundStyle(Color.avoraOnAccent)
                     .font(.avoraButton)
                     .frame(maxWidth: .infinity, minHeight: 56)
