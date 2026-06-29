@@ -21,6 +21,17 @@ struct StylesGridView: View {
                         .buttonStyle(.plain)
                 }
             }.padding()
+
+            if loadError && styles.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t load styles", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text("Check your connection and try again.")
+                } actions: {
+                    Button("Retry") { Task { await load() } }
+                }
+                .padding(.top, 40)
+            }
         }
         .navigationTitle("Avora")
         .toolbar {
@@ -34,6 +45,7 @@ struct StylesGridView: View {
     }
 
     private func load() async {
+        loadError = false
         do {
             styles = try await AvoraAPI.shared.fetchStyles()
             await app.refreshProfile()
