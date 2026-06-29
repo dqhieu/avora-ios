@@ -12,7 +12,7 @@ actor ImageStore {
     static let shared = ImageStore()
 
     /// Which bucket a path lives in, and therefore how its URL is resolved.
-    enum Source {
+    enum Source: Hashable {
         /// Private per-user `outputs` bucket — resolved via short-lived signed URLs.
         case output
         /// Public `assets` bucket (e.g. style samples) — resolved via stable public URLs.

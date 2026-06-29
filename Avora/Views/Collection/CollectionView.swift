@@ -24,7 +24,7 @@ struct CollectionView: View {
         }
         .navigationTitle("Collection")
         .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
-        .navigationDestination(for: Style.self) { CreateView(style: $0) }
+        .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
@@ -77,6 +77,11 @@ private struct CreationDetailView: View {
     @State private var style: Style?
     @State private var saved = false
 
+    /// The creation's own output image, reused as the placeholder in `CreateView`.
+    private var placeholder: RemoteImageRef? {
+        generation.outputPath.map { RemoteImageRef(path: $0, source: .output) }
+    }
+
     var body: some View {
         VStack(spacing: Spacing.lg) {
             if let path = generation.outputPath {
@@ -93,7 +98,7 @@ private struct CreationDetailView: View {
 
     @ViewBuilder private var controls: some View {
         if let style {
-            NavigationLink(value: style) {
+            NavigationLink(value: CreateRoute(style: style, placeholder: placeholder)) {
                 Label("Create with this style", systemImage: "wand.and.stars")
                     .frame(maxWidth: .infinity)
             }

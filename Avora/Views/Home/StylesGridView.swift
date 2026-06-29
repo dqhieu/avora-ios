@@ -10,8 +10,10 @@ struct StylesGridView: View {
         ScrollView {
             LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(app.styles) { style in
-                    NavigationLink(value: style) { StyleCard(style: style) }
-                        .buttonStyle(.plain)
+                    NavigationLink(value: CreateRoute(style: style, placeholder: nil)) {
+                        StyleCard(style: style)
+                    }
+                    .buttonStyle(.plain)
                 }
             }.padding()
 
@@ -35,7 +37,7 @@ struct StylesGridView: View {
         .sheet(isPresented: $showSettings) {
             NavigationStack { SettingsView().environment(app) }
         }
-        .navigationDestination(for: Style.self) { CreateView(style: $0) }
+        .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .task { await load() }
         .refreshable { await load(force: true) }
     }

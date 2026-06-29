@@ -3,6 +3,7 @@ import PhotosUI
 
 struct CreateView: View {
     let style: Style
+    private let placeholder: RemoteImageRef?
     @Environment(AppState.self) private var app
     @State private var pickerItem: PhotosPickerItem?
     @State private var sourceImage: UIImage?
@@ -11,6 +12,17 @@ struct CreateView: View {
     @State private var showPaywall = false
     @State private var errorText: String?
     @State private var isSubmitting = false
+
+    init(route: CreateRoute) {
+        self.style = route.style
+        self.placeholder = route.placeholder
+    }
+
+    /// Image shown before the user picks a photo: an explicit one from the route
+    /// (e.g. a prior creation), otherwise the style's own sample.
+    private var effectivePlaceholder: RemoteImageRef? {
+        placeholder ?? style.sampleImagePath.map { RemoteImageRef(path: $0, source: .sample) }
+    }
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
@@ -31,6 +43,15 @@ struct CreateView: View {
                 RemoteImage(path: resultPath, contentMode: .fit)
             } else if let sourceImage {
                 Image(uiImage: sourceImage).resizable().scaledToFit().opacity(isWorking ? 0.4 : 1)
+            } else if let effectivePlaceholder {
+                RemoteImage(path: effectivePlaceholder.path, source: effectivePlaceholder.source, contentMode: .fit)
+                    .opacity(0.4)
+                    .overlay {
+                        Text("Pick a photo to start")
+                            .foregroundStyle(Color.avoraTextSecondary)
+                            .padding(Spacing.sm)
+                            .avoraGlass(in: Capsule())
+                    }
             } else {
                 RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                     .fill(Color.avoraSurface)
