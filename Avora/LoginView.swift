@@ -38,10 +38,7 @@ struct LoginView: View {
             }
             .buttonStyle(.plain)
             .background(.ultraThinMaterial, in: Capsule())
-            .overlay {
-                Capsule()
-                    .stroke(.white.opacity(0.22), lineWidth: 1)
-            }
+            .overlay { Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 1) }
             .disabled(isLoading)
         }
     }
@@ -50,11 +47,11 @@ struct LoginView: View {
         Group {
             if isLoading {
                 ProgressView()
-                    .tint(.black)
+                    .tint(Color.avoraOnAccent)
                     .frame(maxWidth: .infinity, minHeight: 56)
             } else {
-                Text("Sign in with Apple")
-                    .foregroundStyle(.black)
+                Label("Sign in with Apple", systemImage: "apple.logo")
+                    .foregroundStyle(Color.avoraOnAccent)
                     .font(.avoraButton)
                     .frame(maxWidth: .infinity, minHeight: 56)
                     .contentShape(.capsule)

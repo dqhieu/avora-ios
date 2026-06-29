@@ -8,7 +8,7 @@ struct CollectionView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: cols, spacing: 8) {
+            LazyVGrid(columns: cols, spacing: Spacing.sm) {
                 ForEach(items.filter { $0.status == .completed && $0.outputPath != nil }) { gen in
                     NavigationLink { FullImageView(path: gen.outputPath!) } label: {
                         Thumb(path: gen.outputPath!)
@@ -17,7 +17,7 @@ struct CollectionView: View {
                         if gen.id == items.last?.id { Task { await loadMore() } }
                     }
                 }
-            }.padding(8)
+            }.padding(Spacing.sm)
         }
         .navigationTitle("Collection")
         .overlay {
@@ -48,13 +48,13 @@ struct CollectionView: View {
 private struct Thumb: View {
     let path: String
     var body: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(.secondary.opacity(0.12))
+        RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
+            .fill(Color.avoraSurface)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
                 RemoteImage(path: path, contentMode: .fill)
             }
-            .clipShape(.rect(cornerRadius: 10))
+            .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
     }
 }
 

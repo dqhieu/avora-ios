@@ -15,7 +15,7 @@ struct RemoteImage: View {
                 Image(uiImage: image).resizable().aspectRatio(contentMode: contentMode)
             } else if failed {
                 Button { Task { await load() } } label: {
-                    Image(systemName: "arrow.clockwise").foregroundStyle(.secondary)
+                    Image(systemName: "arrow.clockwise").foregroundStyle(Color.avoraTextSecondary)
                 }
             } else {
                 ProgressView()
