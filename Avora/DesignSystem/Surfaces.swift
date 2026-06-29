@@ -47,8 +47,6 @@ struct AvoraPrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Primary action button wrapper: applies `AvoraPrimaryButtonStyle` and pins the light
-/// color scheme so the clear glass reads correctly over light backgrounds.
 struct AvoraPrimaryButton<Label: View>: View {
     private let action: () -> Void
     @ViewBuilder private let label: () -> Label
@@ -61,7 +59,6 @@ struct AvoraPrimaryButton<Label: View>: View {
     var body: some View {
         Button(action: action, label: label)
             .buttonStyle(AvoraPrimaryButtonStyle())
-            .preferredColorScheme(.light)
     }
 }
 

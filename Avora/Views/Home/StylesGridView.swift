@@ -49,25 +49,33 @@ struct StylesGridView: View {
 }
 
 private struct StyleCard: View {
+    @Environment(\.colorScheme) private var colorScheme
     let style: Style
     var body: some View {
         VStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
-                .fill(LinearGradient.avoraSurfaceGradient)
-                .aspectRatio(1, contentMode: .fit)
-                .overlay {
-                    Image(systemName: "photo")
-                        .font(.avoraLargeTitle)
-                        .foregroundStyle(Color.avoraTextTertiary)
-                }
-                .overlay(
-                    RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
-                        .strokeBorder(Color.avoraBorderHighlight, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.4), radius: 12, y: 6)
+            tile
             Text(style.name)
                 .font(.avoraHeadline)
                 .padding(.top, Spacing.xs)
+        }
+    }
+
+    @ViewBuilder
+    private var tile: some View {
+        let shape = RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+        let content = Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .overlay {
+                Image(systemName: "photo")
+                    .font(.avoraLargeTitle)
+                    .foregroundStyle(Color.avoraTextTertiary)
+            }
+        if #available(iOS 26.0, *) {
+            content.glassEffect(in: shape)
+        } else {
+            content
+                .background(colorScheme == .dark ? Color(red: 0.15, green: 0.15, blue: 0.15) : .white, in: shape)
+                .overlay(shape.stroke(Color.secondary.opacity(0.5), lineWidth: 0.5))
         }
     }
 }

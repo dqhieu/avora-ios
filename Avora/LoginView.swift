@@ -28,6 +28,7 @@ struct LoginView: View {
             loginButtonLabel
         }
         .disabled(isLoading)
+        .preferredColorScheme(.light)
     }
 
     @ViewBuilder
