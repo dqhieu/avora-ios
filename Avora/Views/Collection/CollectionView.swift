@@ -20,6 +20,11 @@ struct CollectionView: View {
             }.padding(Spacing.sm)
         }
         .navigationTitle("Collection")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
+            }
+        }
         .overlay {
             if items.isEmpty && !loading {
                 ContentUnavailableView(
@@ -64,5 +69,6 @@ private struct FullImageView: View {
         RemoteImage(path: path, contentMode: .fit)
             .navigationTitle("Creation")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .tabBar)
     }
 }

@@ -38,6 +38,7 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .toolbar(.hidden, for: .tabBar)
         .alert("Error", isPresented: Binding(
             get: { deleteError != nil },
             set: { if !$0 { deleteError = nil } }

@@ -8,18 +8,6 @@ struct StylesGridView: View {
 
     var body: some View {
         ScrollView {
-            if let p = app.profile {
-                HStack {
-                    Label("\(p.totalCredits) credits", systemImage: "sparkles")
-                    Spacer()
-                    Text("\(p.totalGenerations) generations")
-                        .foregroundStyle(Color.avoraTextSecondary)
-                }
-                .font(.avoraSubheadline.monospacedDigit())
-                .padding(Spacing.md)
-                .avoraElevatedSurface(cornerRadius: Radius.md)
-                .padding(.horizontal, Spacing.lg)
-            }
             LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(styles) { style in
                     NavigationLink(value: style) { StyleCard(style: style) }
@@ -38,7 +26,7 @@ struct StylesGridView: View {
                 .padding(.top, 40)
             }
         }
-        .navigationTitle("Avora")
+        .navigationTitle("Styles")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
