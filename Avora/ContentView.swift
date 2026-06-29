@@ -12,6 +12,9 @@ struct ContentView: View {
             }
         }
         .font(.avoraBody)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(LinearGradient.avoraBackgroundGradient.ignoresSafeArea())
+        .preferredColorScheme(.dark)
     }
 }
 
