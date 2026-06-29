@@ -54,12 +54,12 @@ curl -s -X PATCH "$REST/styles?id=eq.$STYLE" \
   -d '{"default_quality":"low"}' >/dev/null
 
 echo "→ creating confirmed test user $EMAIL"
-UID=$(curl -s -X POST "$AUTH/admin/users" \
+USER_ID=$(curl -s -X POST "$AUTH/admin/users" \
   -H "apikey: $SERVICE_ROLE_KEY" -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"email_confirm\":true}" \
   | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
-echo "   uid=$UID"
+echo "   uid=$USER_ID"
 
 echo "→ signing in for a JWT"
 JWT=$(curl -s -X POST "$AUTH/token?grant_type=password" \
@@ -67,15 +67,15 @@ JWT=$(curl -s -X POST "$AUTH/token?grant_type=password" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" \
   | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
 
-echo "→ uploading input to inputs/$UID/smoke.png"
-curl -s -X POST "$STG/object/inputs/$UID/smoke.png" \
+echo "→ uploading input to inputs/$USER_ID/smoke.png"
+curl -s -X POST "$STG/object/inputs/$USER_ID/smoke.png" \
   -H "Authorization: Bearer $SERVICE_ROLE_KEY" -H "Content-Type: image/png" \
   --data-binary "@$PNG" >/dev/null
 
 echo "→ submitting generation"
 SUBMIT=$(curl -s -X POST "$FN/submit-generation" \
   -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
-  -d "{\"style_id\":\"$STYLE\",\"input_path\":\"$UID/smoke.png\"}")
+  -d "{\"style_id\":\"$STYLE\",\"input_path\":\"$USER_ID/smoke.png\"}")
 echo "   submit response: $SUBMIT"
 JOB=$(echo "$SUBMIT" | python3 -c 'import sys,json;print(json.load(sys.stdin)["job_id"])')
 echo "   job_id=$JOB"
