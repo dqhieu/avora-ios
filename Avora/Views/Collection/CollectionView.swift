@@ -38,7 +38,8 @@ struct CollectionView: View {
         loading = true
         defer { loading = false }
         if let (page, next) = try? await AvoraAPI.shared.listGenerations(cursor: nextCursor) {
-            items += page
+            let seen = Set(items.map(\.id))
+            items += page.filter { !seen.contains($0.id) }
             nextCursor = next
         }
     }
@@ -46,27 +47,21 @@ struct CollectionView: View {
 
 private struct Thumb: View {
     let path: String
-    @State private var url: URL?
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
             .fill(.secondary.opacity(0.12))
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                if let url {
-                    AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { ProgressView() }
-                }
+                RemoteImage(path: path, contentMode: .fill)
             }
             .clipShape(.rect(cornerRadius: 10))
-            .task { url = try? await AvoraAPI.shared.signedOutputURL(path) }
     }
 }
 
 private struct FullImageView: View {
     let path: String
-    @State private var url: URL?
     var body: some View {
-        AsyncImage(url: url) { $0.resizable().scaledToFit() } placeholder: { ProgressView() }
-            .task { url = try? await AvoraAPI.shared.signedOutputURL(path) }
+        RemoteImage(path: path, contentMode: .fit)
             .navigationTitle("Creation")
             .navigationBarTitleDisplayMode(.inline)
     }

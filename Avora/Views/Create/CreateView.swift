@@ -7,7 +7,7 @@ struct CreateView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var sourceImage: UIImage?
     @State private var poller = GenerationPoller()
-    @State private var resultURL: URL?
+    @State private var resultPath: String?
     @State private var showPaywall = false
     @State private var errorText: String?
     @State private var isSubmitting = false
@@ -27,8 +27,8 @@ struct CreateView: View {
 
     @ViewBuilder private var previewArea: some View {
         ZStack {
-            if let resultURL {
-                AsyncImage(url: resultURL) { $0.resizable().scaledToFit() } placeholder: { ProgressView() }
+            if let resultPath {
+                RemoteImage(path: resultPath, contentMode: .fit)
             } else if let sourceImage {
                 Image(uiImage: sourceImage).resizable().scaledToFit().opacity(isWorking ? 0.4 : 1)
             } else {
@@ -45,7 +45,7 @@ struct CreateView: View {
     }
 
     @ViewBuilder private var controls: some View {
-        if resultURL != nil {
+        if resultPath != nil {
             HStack {
                 Button { Task { await save() } } label: {
                     Label("Save", systemImage: "square.and.arrow.down")
@@ -82,7 +82,7 @@ struct CreateView: View {
         guard let data = try? await item?.loadTransferable(type: Data.self),
               let img = UIImage(data: data) else { return }
         sourceImage = img
-        resultURL = nil
+        resultPath = nil
         errorText = nil
     }
 
@@ -106,11 +106,7 @@ struct CreateView: View {
     private func handlePhase(_ phase: GenerationPoller.Phase) async {
         switch phase {
         case .done(let path):
-            do {
-                resultURL = try await AvoraAPI.shared.signedOutputURL(path)
-            } catch {
-                errorText = "Generation finished but the result couldn’t be loaded. Pull to refresh in your Collection."
-            }
+            resultPath = path
             await app.refreshProfile()
         case .failed:
             errorText = "This photo couldn't be generated. Your credit was refunded."
@@ -121,16 +117,15 @@ struct CreateView: View {
     }
 
     private func save() async {
-        guard let url = resultURL,
-              let (data, _) = try? await URLSession.shared.data(from: url),
-              let img = UIImage(data: data) else { return }
+        guard let resultPath,
+              let img = try? await ImageStore.shared.image(for: resultPath) else { return }
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
     }
 
     private func reset() {
         poller.stop()
         poller = GenerationPoller()
-        resultURL = nil
+        resultPath = nil
         pickerItem = nil
         sourceImage = nil
         errorText = nil
