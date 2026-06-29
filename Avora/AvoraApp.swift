@@ -6,6 +6,7 @@ struct AvoraApp: App {
 
     init() {
         FontRegistrar.registerBundledFonts()
+        AppearanceConfigurator.configureNavigationBar()
         #if DEBUG
         let missingFonts = FontAudit.missingPostScriptNames()
         assert(missingFonts.isEmpty, "Missing bundled fonts: \(missingFonts)")
