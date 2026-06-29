@@ -13,7 +13,7 @@ struct StylesGridView: View {
                     Label("\(p.totalCredits) credits", systemImage: "sparkles")
                     Spacer()
                     Text("\(p.totalGenerations) generations").foregroundStyle(.secondary)
-                }.padding(.horizontal).font(.subheadline)
+                }.padding(.horizontal).font(.avoraSubheadline.monospacedDigit())
             }
             LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(styles) { style in
@@ -63,9 +63,9 @@ private struct StyleCard: View {
                 .fill(.secondary.opacity(0.15))
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
-                    Image(systemName: "photo").font(.largeTitle).foregroundStyle(.secondary)
+                    Image(systemName: "photo").font(.avoraLargeTitle).foregroundStyle(.secondary)
                 }
-            Text(style.name).font(.subheadline).bold().padding(.top, 4)
+            Text(style.name).font(.avoraHeadline).padding(.top, 4)
         }
     }
 }

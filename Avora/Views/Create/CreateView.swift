@@ -68,7 +68,7 @@ struct CreateView: View {
             .disabled(sourceImage == nil || isWorking)
         }
         if let errorText {
-            Text(errorText).foregroundStyle(.red).font(.footnote)
+            Text(errorText).foregroundStyle(.red).font(.avoraFootnote)
         }
     }
 
