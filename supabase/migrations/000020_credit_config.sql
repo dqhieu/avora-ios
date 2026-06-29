@@ -86,3 +86,51 @@ begin
       and now() > subscription_period_end;
 end;
 $$;
+
+-- apply_purchase now reads grant amounts from config; the webhook no longer
+-- passes them. Drop the old wider signature first (create-or-replace cannot
+-- change a function's parameter list).
+drop function if exists public.apply_purchase(text, uuid, text, int, int, timestamptz);
+
+create or replace function public.apply_purchase(
+  p_tx         text,
+  p_uid        uuid,
+  p_kind       text,         -- 'initial' | 'renewal' | 'extra_pack'
+  p_period_end timestamptz   -- subscription_period_end for renewal/initial (ignored for extra_pack)
+)
+returns text                 -- 'applied' | 'deduped'
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_inserted boolean := false;
+begin
+  insert into public.purchases(transaction_id, user_id, kind)
+    values (p_tx, p_uid, p_kind)
+    on conflict (transaction_id) do nothing;
+
+  get diagnostics v_inserted = row_count;
+
+  if not v_inserted then
+    return 'deduped';
+  end if;
+
+  if p_kind in ('renewal', 'initial') then
+    update public.profiles
+      set weekly_credits          = (select weekly_amount from public.credit_config),
+          subscription_period_end = p_period_end,
+          subscription_active     = true
+      where id = p_uid;
+  elsif p_kind = 'extra_pack' then
+    update public.profiles
+      set extra_credits = extra_credits + (select extra_pack from public.credit_config)
+      where id = p_uid;
+  end if;
+
+  return 'applied';
+end;
+$$;
+
+revoke all on function public.apply_purchase(text, uuid, text, timestamptz)
+  from public, anon, authenticated;
+-- Only the service role (used by the RevenueCat webhook) may call this.

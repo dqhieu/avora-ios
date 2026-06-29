@@ -30,8 +30,6 @@ Deno.serve(async (req) => {
       p_tx:          txId,
       p_uid:         uid,
       p_kind:        kind,
-      p_weekly_set:  1000,
-      p_extra_delta: 0,
       p_period_end:  periodEnd,
     });
     if (rpcErr) return json({ error: "purchase_failed" }, 500);
@@ -43,8 +41,6 @@ Deno.serve(async (req) => {
       p_tx:          txId,
       p_uid:         uid,
       p_kind:        "extra_pack",
-      p_weekly_set:  0,
-      p_extra_delta: 500,
       p_period_end:  null,
     });
     if (rpcErr) return json({ error: "purchase_failed" }, 500);
