@@ -7,11 +7,15 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            if let email = app.userEmail {
+                Section("Account") {
+                    LabeledContent("Email", value: email)
+                }
+            }
             if let p = app.profile {
                 Section("Credits") {
                     LabeledContent("Weekly", value: "\(p.weeklyCredits)")
                     LabeledContent("Extra", value: "\(p.extraCredits)")
-                    LabeledContent("Generations left", value: "\(p.totalGenerations)")
                 }
             }
             Section {

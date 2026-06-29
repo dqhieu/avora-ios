@@ -9,6 +9,10 @@ final class AppState {
     var isAuthenticated = SupabaseClientProvider.client.auth.currentSession != nil
     var profile: Profile?
 
+    var userEmail: String? {
+        SupabaseClientProvider.client.auth.currentUser?.email
+    }
+
     func bootstrap() async {
         let session = try? await SupabaseClientProvider.client.auth.session
         if session != nil {
