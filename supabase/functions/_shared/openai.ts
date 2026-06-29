@@ -14,6 +14,7 @@ export interface EditResult {
 export async function runEdit(opts: {
   imageBytes: Uint8Array;
   filename: string;
+  contentType?: string;
   prompt: string;
   size: string;
   quality: string;
@@ -23,7 +24,13 @@ export async function runEdit(opts: {
   form.append("prompt", opts.prompt);
   form.append("size", opts.size);
   form.append("quality", opts.quality);
-  form.append("image", new Blob([opts.imageBytes]), opts.filename);
+  // The Blob MUST carry a MIME type or the multipart part defaults to
+  // application/octet-stream and OpenAI rejects it as unsupported_file_mimetype.
+  form.append(
+    "image",
+    new Blob([opts.imageBytes], { type: opts.contentType || "image/png" }),
+    opts.filename,
+  );
 
   const res = await fetch("https://api.openai.com/v1/images/edits", {
     method: "POST",

@@ -36,9 +36,11 @@ Deno.serve(async () => {
 
       const { data: blob } = await db.storage.from("inputs").download(gen.input_path);
       const bytes = new Uint8Array(await blob!.arrayBuffer());
+      const contentType = blob!.type || "image/png";
+      const filename = contentType === "image/jpeg" ? "input.jpg" : "input.png";
 
       const result = await runEdit({
-        imageBytes: bytes, filename: "input.png",
+        imageBytes: bytes, filename, contentType,
         prompt: style!.prompt_template, size: style!.default_size, quality: gen.quality,
       });
 
