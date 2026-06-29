@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
     @State private var confirmDelete = false
     @State private var deleteError: String?
 
@@ -38,7 +39,11 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
-        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
+            }
+        }
         .alert("Error", isPresented: Binding(
             get: { deleteError != nil },
             set: { if !$0 { deleteError = nil } }

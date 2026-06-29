@@ -19,7 +19,6 @@ struct CreateView: View {
         }
         .padding(Spacing.lg)
         .navigationTitle(style.name)
-        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
         .onChange(of: pickerItem) { _, item in Task { await loadPicked(item) } }
         .onChange(of: poller.phase) { _, phase in Task { await handlePhase(phase) } }

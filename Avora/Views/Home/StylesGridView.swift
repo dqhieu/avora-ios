@@ -4,6 +4,7 @@ struct StylesGridView: View {
     @Environment(AppState.self) private var app
     @State private var styles: [Style] = []
     @State private var loadError = false
+    @State private var showSettings = false
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -29,8 +30,11 @@ struct StylesGridView: View {
         .navigationTitle("Styles")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
+                Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack { SettingsView().environment(app) }
         }
         .navigationDestination(for: Style.self) { CreateView(style: $0) }
         .task { await load() }

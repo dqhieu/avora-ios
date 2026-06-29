@@ -1,16 +1,18 @@
 import SwiftUI
 
 struct CollectionView: View {
+    @Environment(AppState.self) private var app
     @State private var items: [Generation] = []
     @State private var nextCursor: Date?
     @State private var loading = false
+    @State private var showSettings = false
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
     var body: some View {
         ScrollView {
             LazyVGrid(columns: cols, spacing: Spacing.sm) {
                 ForEach(items.filter { $0.status == .completed && $0.outputPath != nil }) { gen in
-                    NavigationLink { FullImageView(path: gen.outputPath!) } label: {
+                    NavigationLink(value: ImageRoute(path: gen.outputPath!)) {
                         Thumb(path: gen.outputPath!)
                     }.buttonStyle(.plain)
                     .onAppear {
@@ -20,10 +22,14 @@ struct CollectionView: View {
             }.padding(Spacing.sm)
         }
         .navigationTitle("Collection")
+        .navigationDestination(for: ImageRoute.self) { FullImageView(path: $0.path) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
+                Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack { SettingsView().environment(app) }
         }
         .overlay {
             if items.isEmpty && !loading {
@@ -69,6 +75,5 @@ private struct FullImageView: View {
         RemoteImage(path: path, contentMode: .fit)
             .navigationTitle("Creation")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .tabBar)
     }
 }
