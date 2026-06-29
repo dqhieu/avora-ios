@@ -34,6 +34,7 @@ struct PaywallView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") { dismiss() }
+                        .disabled(busy)
                 }
             }
             .task {
@@ -48,8 +49,10 @@ struct PaywallView: View {
         do {
             try await AvoraPurchases.purchase(pkg)
             // Credits arrive via RevenueCat webhook → backend; poll until profile updates
+            let before = app.profile?.totalCredits ?? 0
             for _ in 0..<10 {
                 await app.refreshProfile()
+                if (app.profile?.totalCredits ?? 0) > before { break }
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
             dismiss()

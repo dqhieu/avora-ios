@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppState.self) private var app
     @State private var confirmDelete = false
+    @State private var deleteError: String?
 
     var body: some View {
         List {
@@ -33,6 +34,14 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .alert("Error", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "")
+        }
         .confirmationDialog(
             "Delete your account? This cannot be undone.",
             isPresented: $confirmDelete,
@@ -40,8 +49,12 @@ struct SettingsView: View {
         ) {
             Button("Delete Everything", role: .destructive) {
                 Task {
-                    try? await AvoraAPI.shared.deleteAccount()
-                    await app.signOut()
+                    do {
+                        try await AvoraAPI.shared.deleteAccount()
+                        await app.signOut()
+                    } catch {
+                        deleteError = "Couldn't delete your account. Please try again."
+                    }
                 }
             }
         }

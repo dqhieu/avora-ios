@@ -89,6 +89,5 @@ struct AvoraAPI {
     func deleteAccount() async throws {
         let _: [String: Bool] = try await db.functions
             .invoke("delete-account", options: .init(method: .post))
-        try await db.auth.signOut()
     }
 }
