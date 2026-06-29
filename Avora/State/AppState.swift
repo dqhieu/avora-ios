@@ -4,15 +4,21 @@ import Supabase
 @MainActor
 @Observable
 final class AppState {
-    var isAuthenticated = false
+    // Seeded synchronously from the locally persisted session so the first
+    // frame already shows the right screen — no waiting on bootstrap().
+    var isAuthenticated = SupabaseClientProvider.client.auth.currentSession != nil
     var profile: Profile?
 
     func bootstrap() async {
         let session = try? await SupabaseClientProvider.client.auth.session
-        isAuthenticated = session != nil
-        if isAuthenticated {
+        if session != nil {
+            isAuthenticated = true
             await configureRevenueCat()
             await refreshProfile()
+        } else if SupabaseClientProvider.client.auth.currentSession == nil {
+            // No persisted session at all → definitely logged out. A failed
+            // refresh with a cached session (e.g. offline) stays optimistic.
+            isAuthenticated = false
         }
     }
 
