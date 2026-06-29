@@ -27,7 +27,11 @@ final class GenerationPoller {
                     switch r.status {
                     case .pending: break
                     case .completed:
-                        await MainActor.run { self?.phase = .done(outputPath: r.outputPath ?? "") }
+                        if let path = r.outputPath, !path.isEmpty {
+                            await MainActor.run { self?.phase = .done(outputPath: path) }
+                        } else {
+                            await MainActor.run { self?.phase = .failed(code: "no_output") }
+                        }
                         return
                     case .failed:
                         await MainActor.run { self?.phase = .failed(code: r.errorCode) }
