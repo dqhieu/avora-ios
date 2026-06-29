@@ -1,15 +1,23 @@
 import UIKit
 import CryptoKit
 
-/// Caches remote output images keyed by their stable storage `path`.
+/// Caches remote images keyed by their stable storage `path`.
 ///
 /// Signed URLs from `signedOutputURL` carry a fresh token on every call and
 /// expire after an hour, so they can't be used as a cache key. The storage
-/// path is the immutable identity of an output, and generated images never
-/// change content, so we key memory + disk on the path and only sign a URL on
-/// a genuine miss.
+/// path is the immutable identity of an image, and stored images never change
+/// content, so we key memory + disk on the path (plus its source) and only
+/// resolve a URL on a genuine miss.
 actor ImageStore {
     static let shared = ImageStore()
+
+    /// Which bucket a path lives in, and therefore how its URL is resolved.
+    enum Source {
+        /// Private per-user `outputs` bucket — resolved via short-lived signed URLs.
+        case output
+        /// Public `assets` bucket (e.g. style samples) — resolved via stable public URLs.
+        case sample
+    }
 
     enum Failure: Error { case decode }
 
@@ -23,27 +31,32 @@ actor ImageStore {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     }
 
-    func image(for path: String) async throws -> UIImage {
-        let key = path as NSString
+    func image(for path: String, source: Source = .output) async throws -> UIImage {
+        let cacheKey = "\(source):\(path)"
+        let key = cacheKey as NSString
         if let cached = memory.object(forKey: key) { return cached }
-        if let existing = inFlight[path] { return try await existing.value }
+        if let existing = inFlight[cacheKey] { return try await existing.value }
 
-        let task = Task<UIImage, Error> { try await self.load(path: path) }
-        inFlight[path] = task
-        defer { inFlight[path] = nil }
+        let task = Task<UIImage, Error> { try await self.load(path: path, source: source) }
+        inFlight[cacheKey] = task
+        defer { inFlight[cacheKey] = nil }
 
         let image = try await task.value
         memory.setObject(image, forKey: key)
         return image
     }
 
-    private func load(path: String) async throws -> UIImage {
-        let fileURL = dir.appendingPathComponent(filename(for: path))
+    private func load(path: String, source: Source) async throws -> UIImage {
+        let fileURL = dir.appendingPathComponent(filename(for: "\(source):\(path)"))
         if let data = try? Data(contentsOf: fileURL), let image = UIImage(data: data) {
             return image
         }
-        let signed = try await AvoraAPI.shared.signedOutputURL(path)
-        let (data, _) = try await URLSession.shared.data(from: signed)
+        let url: URL
+        switch source {
+        case .output: url = try await AvoraAPI.shared.signedOutputURL(path)
+        case .sample: url = try await AvoraAPI.shared.sampleURL(path)
+        }
+        let (data, _) = try await URLSession.shared.data(from: url)
         guard let image = UIImage(data: data) else { throw Failure.decode }
         try? data.write(to: fileURL, options: .atomic)
         return image

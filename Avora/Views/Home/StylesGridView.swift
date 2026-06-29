@@ -70,10 +70,15 @@ private struct StyleCard: View {
             .contentShape(.rect)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                Image(systemName: "photo")
-                    .font(.avoraLargeTitle)
-                    .foregroundStyle(Color.avoraTextTertiary)
+                if let path = style.sampleImagePath {
+                    RemoteImage(path: path, source: .sample, contentMode: .fill)
+                } else {
+                    Image(systemName: "photo")
+                        .font(.avoraLargeTitle)
+                        .foregroundStyle(Color.avoraTextTertiary)
+                }
             }
+            .clipShape(shape)
         if #available(iOS 26.0, *) {
             content.glassEffect(in: shape)
         } else {

@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Loads an output image through `ImageStore`, keyed by its storage path.
+/// Loads a remote image through `ImageStore`, keyed by its storage path.
 /// Drop-in replacement for `AsyncImage(url:)` that survives signed-URL churn.
 struct RemoteImage: View {
     let path: String
+    var source: ImageStore.Source = .output
     var contentMode: ContentMode = .fit
 
     @State private var image: UIImage?
@@ -27,7 +28,7 @@ struct RemoteImage: View {
     private func load() async {
         failed = false
         do {
-            image = try await ImageStore.shared.image(for: path)
+            image = try await ImageStore.shared.image(for: path, source: source)
         } catch {
             if !Task.isCancelled { failed = true }
         }

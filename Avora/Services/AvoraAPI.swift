@@ -86,6 +86,12 @@ struct AvoraAPI {
         try await db.storage.from("outputs").createSignedURL(path: path, expiresIn: 3600)
     }
 
+    /// Stable public URL for a shared asset in the public `assets` bucket
+    /// (e.g. a style's `sample_image_path`). No token churn, so it caches well.
+    func sampleURL(_ path: String) throws -> URL {
+        try db.storage.from("assets").getPublicURL(path: path)
+    }
+
     func deleteAccount() async throws {
         let _: [String: Bool] = try await db.functions
             .invoke("delete-account", options: .init(method: .post))
