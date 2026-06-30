@@ -81,12 +81,48 @@ private struct StyleCard: View {
                 }
             }
             .clipShape(shape)
-        if #available(iOS 26.0, *) {
-            content.glassEffect(in: shape)
-        } else {
-            content
-                .background(colorScheme == .dark ? Color(red: 0.15, green: 0.15, blue: 0.15) : .white, in: shape)
-                .overlay(shape.stroke(Color.secondary.opacity(0.5), lineWidth: 0.5))
+        Group {
+            if #available(iOS 26.0, *) {
+                content.glassEffect(in: shape)
+            } else {
+                content
+                    .background(colorScheme == .dark ? Color(red: 0.15, green: 0.15, blue: 0.15) : .white, in: shape)
+                    .overlay(shape.stroke(Color.secondary.opacity(0.5), lineWidth: 0.5))
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if let badge = style.displayBadge {
+                StyleBadge(text: badge)
+                    .padding(8)
+            }
         }
     }
 }
+
+private struct StyleBadge: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.avoraCaption2)
+            .foregroundStyle(Color.avoraTextPrimary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(Color.avoraSurface, in: Capsule())
+            .overlay(Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
+            .allowsHitTesting(false)
+    }
+}
+
+#if DEBUG
+#Preview("Style cards — badge states") {
+    let cols = [GridItem(.flexible()), GridItem(.flexible())]
+    return LazyVGrid(columns: cols, spacing: 12) {
+        StyleCard(style: Style(id: "1", name: "Vintage Film", sampleImagePath: nil, active: true, sortOrder: 0, badgeText: "Hot 🔥"))
+        StyleCard(style: Style(id: "2", name: "Watercolor", sampleImagePath: nil, active: true, sortOrder: 1, badgeText: nil))
+        StyleCard(style: Style(id: "3", name: "Trending One", sampleImagePath: nil, active: true, sortOrder: 2, badgeText: "Trending 🔥"))
+        StyleCard(style: Style(id: "4", name: "Blank Badge", sampleImagePath: nil, active: true, sortOrder: 3, badgeText: "   "))
+    }
+    .padding()
+}
+#endif
