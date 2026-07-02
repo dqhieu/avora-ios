@@ -26,11 +26,20 @@ calls `submit-generation` edge function → returns one `job_id` →
 `GenerationPoller` polls `get-generation` every 5s → show/save the single result.
 
 Server billing (`submit-generation/index.ts`): validates style + input file,
-then `deduct_credit(p_uid)` atomically deducts a fixed **25** credits (weekly
-bucket first, then extra), inserts a `generations` row storing
-`charged_bucket` + `charged_amount = 25` + `quality`, enqueues one pgmq message.
-Per-job refund (`refund_credit(generation_id)`) reads that row's own
+then `deduct_credit(p_uid)` atomically deducts `generation_cost` — read live from
+the `credit_config` singleton (currently **20**) — from the weekly bucket first,
+then extra. It inserts a `generations` row storing `charged_bucket` +
+`charged_amount` + `quality`, then enqueues one pgmq message. Per-job refund
+(`refund_credit(generation_id)`) reads that row's own
 `charged_bucket`/`charged_amount`, so refunds are precise per generation.
+
+**Cost is authoritative from config, not hardcoded.** The mobile client fetches
+the same `credit_config.generation_cost` into `app.config.generationCost`, so
+client display/pre-check and server deduction use the same number. (Pre-existing
+latent bug, out of scope: `submit-generation/index.ts` hardcodes
+`charged_amount: 25` while `deduct_credit` deducts the config value 20 — so a
+failed single generation currently over-refunds by 5. The batch RPC below avoids
+this by reading the cost from config and storing it as `charged_amount`.)
 
 ## Backend design
 
@@ -61,21 +70,22 @@ transaction.
 matching `deduct_credit`.
 
 Single transaction:
-1. `PERFORM 1 FROM profiles WHERE id = p_uid FOR UPDATE;` (serialize concurrent submits).
-2. `v_count := array_length(p_input_paths, 1)`; `v_needed := v_count * 25`.
-3. If `weekly_credits + extra_credits < v_needed` →
+1. `SELECT generation_cost INTO v_cost FROM credit_config;` (live cost, same as `deduct_credit`).
+2. `PERFORM 1 FROM profiles WHERE id = p_uid FOR UPDATE;` (serialize concurrent submits).
+3. `v_count := array_length(p_input_paths, 1)`; `v_needed := v_count * v_cost`.
+4. If `weekly_credits + extra_credits < v_needed` →
    `RAISE EXCEPTION 'insufficient_credits' USING errcode = 'P0001';`
    (nothing deducted — transaction aborts clean).
-4. Allocate a bucket **per row**: fill from `weekly` first (25 each) until the
-   weekly balance can't cover another 25, then from `extra`. Deduct
+5. Allocate a bucket **per row**: fill from `weekly` first (`v_cost` each) until the
+   weekly balance can't cover another `v_cost`, then from `extra`. Deduct
    `weekly_credits` / `extra_credits` accordingly in the profile.
-5. For each input path, `INSERT INTO generations (user_id, style_id, status,
+6. For each input path, `INSERT INTO generations (user_id, style_id, status,
    charged_bucket, charged_amount, input_path, quality)` with that row's
-   allocated bucket, `charged_amount = 25`, `status = 'pending'`,
+   allocated bucket, `charged_amount = v_cost`, `status = 'pending'`,
    `quality = p_quality`. Collect the new `id`.
-6. For each new id, enqueue via `pgmq_send('generations', { job_id })`
+7. For each new id, enqueue via `pgmq_send('generations', { job_id })`
    (transactional — rolls back with the inserts on any failure).
-7. `RETURN` the array of new `job_id`s in input order.
+8. `RETURN` the array of new `job_id`s in input order.
 
 **Why per-row bucket matters:** a batch may straddle both buckets (e.g. weekly
 covers 2 of 4, extra covers the other 2). Storing each row's own
@@ -153,17 +163,10 @@ Controls:
 - **Insufficient credits:** caught at the RPC before any deduction → 402 → paywall;
   no partial generations.
 
-## Known pre-existing quirk (not introduced here)
-
-The client displays and pre-checks cost using `app.config.generationCost`, while
-the server bills a hardcoded **25** per generation (`deduct_credit`). This mismatch
-already exists in the single-photo flow (`CreateView` line 99). This design keeps
-the same behavior (multiplying `generationCost` by count for display/pre-check);
-the server's `× 25` remains authoritative. Reconciling the two is out of scope.
-
 ## Out of scope
 
-- No change to per-generation cost (fixed 25 server-side).
+- No change to per-generation cost (read live from `credit_config`, currently 20).
+- Not fixing the single `submit-generation` `charged_amount: 25` over-refund bug.
 - No change to the queue worker or refund logic.
 - No mixing of multiple styles in one batch.
 
