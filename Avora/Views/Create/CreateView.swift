@@ -181,17 +181,19 @@ struct CreateView: View {
         do {
             // Upload all inputs in parallel; if any fails, abort before submitting
             // so billing stays all-or-nothing (nothing is charged).
+            // Normalize on the main actor — UIImage isn't Sendable; the parallel uploads
+            // then carry only Sendable Data. Order preserved via the index map.
+            let payloads = imgs.map { ImageNormalizer.normalize($0) }
             let paths = try await withThrowingTaskGroup(of: (Int, String).self) { group -> [String] in
-                for (i, img) in imgs.enumerated() {
+                for (i, data) in payloads.enumerated() {
                     group.addTask {
-                        let data = ImageNormalizer.normalize(img)
                         let path = try await AvoraAPI.shared.uploadInput(data)
                         return (i, path)
                     }
                 }
                 var byIndex: [Int: String] = [:]
                 for try await (i, path) in group { byIndex[i] = path }
-                return imgs.indices.map { byIndex[$0]! }
+                return payloads.indices.map { byIndex[$0]! }
             }
             let jobIds = try await AvoraAPI.shared.submitBatch(styleId: style.id, inputPaths: paths)
             poller.start(jobIds: jobIds, poll: { try await AvoraAPI.shared.poll(jobId: $0) })
