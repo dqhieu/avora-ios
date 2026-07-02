@@ -153,6 +153,14 @@ Controls:
 - **Insufficient credits:** caught at the RPC before any deduction → 402 → paywall;
   no partial generations.
 
+## Known pre-existing quirk (not introduced here)
+
+The client displays and pre-checks cost using `app.config.generationCost`, while
+the server bills a hardcoded **25** per generation (`deduct_credit`). This mismatch
+already exists in the single-photo flow (`CreateView` line 99). This design keeps
+the same behavior (multiplying `generationCost` by count for display/pre-check);
+the server's `× 25` remains authoritative. Reconciling the two is out of scope.
+
 ## Out of scope
 
 - No change to per-generation cost (fixed 25 server-side).
@@ -163,7 +171,7 @@ Controls:
 
 **Create**
 - `supabase/functions/submit-generation-batch/index.ts`
-- `supabase/migrations/0000XX_submit_generations_batch.sql`
+- `supabase/migrations/000026_submit_generations_batch.sql`
 - `Avora/Services/BatchGenerationPoller.swift`
 
 **Modify**
