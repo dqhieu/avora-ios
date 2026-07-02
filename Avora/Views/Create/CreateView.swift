@@ -118,19 +118,11 @@ struct CreateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // One card per picked photo. It shows the source image, sparkles while its job
-    // generates, the finished result once ready, or a refunded badge if it failed.
+    // One card per picked photo. It pixelates while its job generates, sharpens
+    // into the finished result once ready, or shows a refunded badge if it failed.
     @ViewBuilder private func slotCard(_ index: Int) -> some View {
         let phase = poller.items.indices.contains(index) ? poller.items[index].phase : nil
-        switch phase {
-        case .done(let path):
-            RemoteImage(path: path, contentMode: .fit)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
-        case .working:
-            photoCard(sourceImages[index]) { SparkleDrift() }
-        case .failed:
+        if case .failed = phase {
             photoCard(sourceImages[index]) {
                 ZStack(alignment: .bottomTrailing) {
                     Color.black.opacity(0.2)
@@ -142,12 +134,19 @@ struct CreateView: View {
                         .padding(Spacing.sm)
                 }
             }
-        case nil:
-            // Show sparkles the instant Generate is tapped, before the upload + submit
-            // finishes and the poller takes over the working state.
-            photoCard(sourceImages[index]) {
-                if isSubmitting { SparkleDrift() }
-            }
+        } else {
+            let resultPath: String? = {
+                if case .done(let path) = phase { return path } else { return nil }
+            }()
+            let isWorkingPhase: Bool = {
+                if case .working = phase { return true } else { return false }
+            }()
+            PixelReveal(
+                source: sourceImages[index],
+                resultPath: resultPath,
+                isGenerating: isSubmitting || isWorkingPhase
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
