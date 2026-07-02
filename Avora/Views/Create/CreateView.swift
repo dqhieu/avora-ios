@@ -32,11 +32,7 @@ struct CreateView: View {
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
-            if hasResults {
-                resultsGrid
-            } else {
-                pickArea
-            }
+            photoArea
             controls
         }
         .padding(Spacing.lg)
@@ -60,9 +56,10 @@ struct CreateView: View {
         .onDisappear { poller.stop() }
     }
 
-    // Area shown before generating: a single large photo, a 2-wide grid of photos,
-    // or a placeholder prompt — filling the available height in every case.
-    @ViewBuilder private var pickArea: some View {
+    // The photo area is shown in every state — picking, generating, and done. A single
+    // photo fills the height; multiple photos form a tappable stacked deck that expands
+    // into a horizontal strip. Each card reflects its own generation state via `slotCard`.
+    @ViewBuilder private var photoArea: some View {
         if sourceImages.isEmpty {
             ZStack {
                 if let effectivePlaceholder {
@@ -74,7 +71,7 @@ struct CreateView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if sourceImages.count == 1 {
-            photoCard(sourceImages[0])
+            slotCard(0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if isPhotosExpanded {
             photoStrip
@@ -89,12 +86,12 @@ struct CreateView: View {
         }
     }
 
-    // Expanded view: all picked photos laid out horizontally, scrolled one at a time.
+    // Expanded view: all photos laid out horizontally, scrolled one at a time.
     private var photoStrip: some View {
         ScrollView(.horizontal) {
             HStack(spacing: Spacing.md) {
-                ForEach(Array(sourceImages.enumerated()), id: \.offset) { _, img in
-                    photoCard(img)
+                ForEach(sourceImages.indices, id: \.self) { index in
+                    slotCard(index)
                         .containerRelativeFrame(.horizontal, count: 4, span: 3, spacing: Spacing.md)
                 }
             }
@@ -105,22 +102,13 @@ struct CreateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func photoCard(_ img: UIImage) -> some View {
-        Image(uiImage: img)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
-    }
-
-    // Multiple picked photos fan out as an overlapping deck, each card rotated a
-    // little around the centre so the stack reads as a pile.
+    // Photos fan out as an overlapping deck, each card rotated a little around the
+    // centre so the stack reads as a pile.
     private var stackedPhotos: some View {
         let count = sourceImages.count
         return ZStack {
-            ForEach(Array(sourceImages.enumerated()), id: \.offset) { index, img in
-                photoCard(img)
+            ForEach(sourceImages.indices, id: \.self) { index in
+                slotCard(index)
                     .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
                     .rotationEffect(.degrees((Double(index) - Double(count - 1) / 2) * 7))
                     .zIndex(Double(index))
@@ -130,56 +118,47 @@ struct CreateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // Area shown after generating: one cell per job, each progressing independently.
-    @ViewBuilder private var resultsGrid: some View {
-        filledGrid(poller.items) { item in
-            resultCell(item)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.avoraSurface)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
-        }
-    }
-
-    // Lays items out in rows of two, each cell sharing the available width and height
-    // equally. A single item therefore fills the whole area; more than one forms a grid.
-    @ViewBuilder private func filledGrid<T, Content: View>(
-        _ items: [T], @ViewBuilder content: @escaping (T) -> Content
-    ) -> some View {
-        let rows = stride(from: 0, to: items.count, by: 2).map { start in
-            Array(items[start..<min(start + 2, items.count)].enumerated().map { ($0.offset + start, $0.element) })
-        }
-        VStack(spacing: Spacing.md) {
-            ForEach(rows, id: \.first!.0) { row in
-                HStack(spacing: Spacing.md) {
-                    ForEach(row, id: \.0) { _, item in content(item) }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-    }
-
-    @ViewBuilder private func resultCell(_ item: BatchGenerationPoller.Item) -> some View {
-        switch item.phase {
-        case .working:
-            ProgressView("Generating…")
+    // One card per picked photo. It shows the source image, a shimmer while its job
+    // generates, the finished result once ready, or a refunded badge if it failed.
+    @ViewBuilder private func slotCard(_ index: Int) -> some View {
+        let phase = poller.items.indices.contains(index) ? poller.items[index].phase : nil
+        switch phase {
         case .done(let path):
-            RemoteImage(path: path, contentMode: .fill)
+            RemoteImage(path: path, contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
-                .overlay(alignment: .bottomTrailing) {
-                    Button { Task { await saveOne(path) } } label: {
-                        Image(systemName: "square.and.arrow.down")
-                            .padding(Spacing.sm)
-                            .avoraGlass(in: Circle())
-                    }
-                    .padding(Spacing.sm)
-                }
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+        case .working:
+            photoCard(sourceImages[index]) { Shimmer() }
         case .failed:
-            Text("Couldn't generate — credit refunded")
-                .font(.avoraFootnote)
-                .foregroundStyle(Color.avoraTextSecondary)
-                .multilineTextAlignment(.center)
-                .padding(Spacing.sm)
+            photoCard(sourceImages[index]) {
+                ZStack(alignment: .bottomTrailing) {
+                    Color.black.opacity(0.2)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.avoraFootnote)
+                        .foregroundStyle(Color.avoraTextPrimary)
+                        .padding(Spacing.sm)
+                        .avoraGlass(in: Circle())
+                        .padding(Spacing.sm)
+                }
+            }
+        case nil:
+            photoCard(sourceImages[index]) { EmptyView() }
         }
+    }
+
+    // A photo clipped to a rounded card, with an optional overlay (shimmer, badge)
+    // that is clipped to the same shape.
+    private func photoCard<Overlay: View>(
+        _ img: UIImage, @ViewBuilder overlay: () -> Overlay
+    ) -> some View {
+        Image(uiImage: img)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+            .overlay(overlay())
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
     }
 
     @ViewBuilder private var controls: some View {
