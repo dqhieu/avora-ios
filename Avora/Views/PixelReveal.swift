@@ -44,11 +44,11 @@ struct PixelReveal: View {
 
     // Ramp from sharp to full blocks, then breathe at max until the result lands.
     private func startPixelating() {
-        withAnimation(.easeInOut(duration: 2.5)) {
+        withAnimation(.easeInOut(duration: 7.0)) {
             blockSize = maxBlock
         } completion: {
             guard resultImage == nil, isGenerating else { return }
-            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: 3.5).repeatForever(autoreverses: true)) {
                 blockSize = maxBlock - pulseDip
             }
         }
@@ -61,11 +61,11 @@ struct PixelReveal: View {
         do {
             let img = try await ImageStore.shared.image(for: resultPath)
             resultImage = img
-            withAnimation(.easeOut(duration: 0.25)) { resultOpacity = 1 }
-            withAnimation(.easeInOut(duration: 0.6).delay(0.15)) { blockSize = 1 }
+            withAnimation(.easeOut(duration: 0.8)) { resultOpacity = 1 }
+            withAnimation(.easeInOut(duration: 3.0).delay(0.4)) { blockSize = 1 }
         } catch {
             // Download failed: sharpen the source back so the user still sees a photo.
-            withAnimation(.easeInOut(duration: 0.6)) { blockSize = 1 }
+            withAnimation(.easeInOut(duration: 3.0)) { blockSize = 1 }
         }
     }
 }
