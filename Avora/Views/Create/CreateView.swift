@@ -118,7 +118,7 @@ struct CreateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // One card per picked photo. It shows the source image, a shimmer while its job
+    // One card per picked photo. It shows the source image, sparkles while its job
     // generates, the finished result once ready, or a refunded badge if it failed.
     @ViewBuilder private func slotCard(_ index: Int) -> some View {
         let phase = poller.items.indices.contains(index) ? poller.items[index].phase : nil
@@ -129,7 +129,7 @@ struct CreateView: View {
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
         case .working:
-            photoCard(sourceImages[index]) { Shimmer() }
+            photoCard(sourceImages[index]) { SparkleDrift() }
         case .failed:
             photoCard(sourceImages[index]) {
                 ZStack(alignment: .bottomTrailing) {
@@ -143,7 +143,11 @@ struct CreateView: View {
                 }
             }
         case nil:
-            photoCard(sourceImages[index]) { EmptyView() }
+            // Show sparkles the instant Generate is tapped, before the upload + submit
+            // finishes and the poller takes over the working state.
+            photoCard(sourceImages[index]) {
+                if isSubmitting { SparkleDrift() }
+            }
         }
     }
 
@@ -162,14 +166,13 @@ struct CreateView: View {
     }
 
     @ViewBuilder private var controls: some View {
-        if hasResults {
+        if poller.allTerminal {
             HStack {
                 Button { Task { await saveAll() } } label: {
                     Label("Save all", systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.avoraAccent)
-                .disabled(isWorking)
                 Button { reset() } label: {
                     Label("Generate again", systemImage: "arrow.clockwise")
                 }
@@ -178,11 +181,18 @@ struct CreateView: View {
             }
         } else {
             AvoraPrimaryButton { Task { await generate() } } label: {
-                VStack(spacing: Spacing.xs) {
-                    Label("Generate", systemImage: "wand.and.stars")
-                    Text("\(sourceImages.count * app.config.generationCost) credits")
-                        .font(.avoraCaption)
-                        .opacity(0.85)
+                if isWorking {
+                    HStack(spacing: Spacing.sm) {
+                        ProgressView().tint(Color.avoraOnAccent)
+                        Text("Generating…")
+                    }
+                } else {
+                    VStack(spacing: Spacing.xs) {
+                        Label("Generate", systemImage: "wand.and.stars")
+                        Text("\(sourceImages.count * app.config.generationCost) credits")
+                            .font(.avoraCaption)
+                            .opacity(0.85)
+                    }
                 }
             }
             .disabled(sourceImages.isEmpty || isWorking)
