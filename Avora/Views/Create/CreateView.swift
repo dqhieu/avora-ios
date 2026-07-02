@@ -118,8 +118,8 @@ struct CreateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // One card per picked photo. It pixelates while its job generates, sharpens
-    // into the finished result once ready, or shows a refunded badge if it failed.
+    // One card per picked photo. It eases out of focus while its job generates,
+    // pulls into the finished result once ready, or shows a refunded badge if it failed.
     @ViewBuilder private func slotCard(_ index: Int) -> some View {
         let phase = poller.items.indices.contains(index) ? poller.items[index].phase : nil
         if case .failed = phase {
@@ -141,7 +141,7 @@ struct CreateView: View {
             let isWorkingPhase: Bool = {
                 if case .working = phase { return true } else { return false }
             }()
-            PixelReveal(
+            FocusReveal(
                 source: sourceImages[index],
                 resultPath: resultPath,
                 isGenerating: isSubmitting || isWorkingPhase

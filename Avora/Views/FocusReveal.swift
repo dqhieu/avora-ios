@@ -1,19 +1,20 @@
 import SwiftUI
 
-/// A generation card that dissolves the source photo into pixel blocks while its
-/// job runs, holds (with a gentle pulse) through the result download, then
-/// sharpens the finished result into focus. Replaces `SparkleDrift`.
-struct PixelReveal: View {
+/// A generation card that eases the source photo out of focus while its job
+/// runs, holds (with a gentle breathing blur) through the result download, then
+/// pulls the finished result sharply into focus. Replaces the sparkle/pixelate
+/// generation states.
+struct FocusReveal: View {
     let source: UIImage
     let resultPath: String?
     let isGenerating: Bool
 
-    /// Max block edge in points at full pixelation.
-    private let maxBlock: CGFloat = 24
-    /// How far the block size dips below max on each pulse.
-    private let pulseDip: CGFloat = 4
+    /// Max blur radius in points at full defocus.
+    private let maxBlur: CGFloat = 16
+    /// How far the blur eases back below max on each breath.
+    private let pulseDip: CGFloat = 3
 
-    @State private var blockSize: CGFloat = 1
+    @State private var blurRadius: CGFloat = 0
     @State private var resultImage: UIImage?
     @State private var resultOpacity: CGFloat = 0
 
@@ -24,13 +25,10 @@ struct PixelReveal: View {
                 cardImage(resultImage).opacity(resultOpacity)
             }
         }
-        .layerEffect(
-            ShaderLibrary.pixellate(.float(blockSize)),
-            maxSampleOffset: CGSize(width: maxBlock, height: maxBlock)
-        )
+        .blur(radius: blurRadius)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
-        .onAppear { if isGenerating { startPixelating() } }
-        .onChange(of: isGenerating) { _, gen in if gen { startPixelating() } }
+        .onAppear { if isGenerating { startDefocusing() } }
+        .onChange(of: isGenerating) { _, gen in if gen { startDefocusing() } }
         .task(id: resultPath) { await revealResult() }
     }
 
@@ -42,36 +40,36 @@ struct PixelReveal: View {
             .clipped()
     }
 
-    // Ramp from sharp to full blocks, then breathe at max until the result lands.
-    private func startPixelating() {
+    // Ease from sharp to full blur, then breathe near max until the result lands.
+    private func startDefocusing() {
         withAnimation(.easeInOut(duration: 12.0)) {
-            blockSize = maxBlock
+            blurRadius = maxBlur
         } completion: {
             guard resultImage == nil, isGenerating else { return }
             withAnimation(.easeInOut(duration: 6.0).repeatForever(autoreverses: true)) {
-                blockSize = maxBlock - pulseDip
+                blurRadius = maxBlur - pulseDip
             }
         }
     }
 
-    // Load the finished result, cross-fade it in beneath the blocks so there is
-    // no content pop, then sharpen from the held block size to crisp.
+    // Load the finished result, cross-fade it in beneath the blur so there is no
+    // content pop, then pull it sharply into focus from the held blur.
     private func revealResult() async {
         guard let resultPath else { return }
         do {
             let img = try await ImageStore.shared.image(for: resultPath)
             resultImage = img
             withAnimation(.easeOut(duration: 0.8)) { resultOpacity = 1 }
-            withAnimation(.easeInOut(duration: 3.0).delay(0.4)) { blockSize = 1 }
+            withAnimation(.easeInOut(duration: 3.0).delay(0.4)) { blurRadius = 0 }
         } catch {
-            // Download failed: sharpen the source back so the user still sees a photo.
-            withAnimation(.easeInOut(duration: 3.0)) { blockSize = 1 }
+            // Download failed: pull the source back into focus so the user still sees a photo.
+            withAnimation(.easeInOut(duration: 3.0)) { blurRadius = 0 }
         }
     }
 }
 
 #Preview {
-    PixelReveal(
+    FocusReveal(
         source: UIImage(systemName: "photo.fill")!
             .withTintColor(.systemTeal, renderingMode: .alwaysOriginal),
         resultPath: nil,
