@@ -11,9 +11,7 @@ struct CreateView: View {
     @State private var showPaywall = false
     @State private var errorText: String?
     @State private var isSubmitting = false
-
-    private let columns = [GridItem(.flexible(), spacing: Spacing.md),
-                           GridItem(.flexible(), spacing: Spacing.md)]
+    @State private var isPhotosExpanded = false
 
     init(route: CreateRoute) {
         self.style = route.style
@@ -33,23 +31,27 @@ struct CreateView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                if hasResults {
-                    resultsGrid
-                } else {
-                    PhotosPicker(selection: $pickerItems, maxSelectionCount: 4, matching: .images) {
-                        pickArea
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isWorking)
-                }
-                controls
+        VStack(spacing: Spacing.lg) {
+            if hasResults {
+                resultsGrid
+            } else {
+                pickArea
             }
-            .padding(Spacing.lg)
+            controls
         }
+        .padding(Spacing.lg)
         .navigationTitle(style.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !hasResults {
+                ToolbarItem(placement: .topBarTrailing) {
+                    PhotosPicker(selection: $pickerItems, maxSelectionCount: 4, matching: .images) {
+                        Text("Select photo")
+                    }
+                    .disabled(isWorking)
+                }
+            }
+        }
         .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
         .onChange(of: pickerItems) { _, items in Task { await loadPicked(items) } }
         .onChange(of: poller.allTerminal) { _, done in
@@ -58,45 +60,100 @@ struct CreateView: View {
         .onDisappear { poller.stop() }
     }
 
-    // Area shown before generating: thumbnails of picked photos, or a placeholder prompt.
+    // Area shown before generating: a single large photo, a 2-wide grid of photos,
+    // or a placeholder prompt — filling the available height in every case.
     @ViewBuilder private var pickArea: some View {
         if sourceImages.isEmpty {
             ZStack {
                 if let effectivePlaceholder {
                     RemoteImage(path: effectivePlaceholder.path, source: effectivePlaceholder.source, contentMode: .fit)
-                        .opacity(0.4)
                 } else {
                     RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                         .fill(Color.avoraSurface)
-                        .frame(height: 240)
                 }
-                Text("Pick up to 4 photos to start")
-                    .foregroundStyle(Color.avoraTextSecondary)
-                    .padding(Spacing.sm)
-                    .avoraGlass(in: Capsule())
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if sourceImages.count == 1 {
+            photoCard(sourceImages[0])
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if isPhotosExpanded {
+            photoStrip
         } else {
-            LazyVGrid(columns: columns, spacing: Spacing.md) {
-                ForEach(Array(sourceImages.enumerated()), id: \.offset) { _, img in
-                    Image(uiImage: img)
-                        .resizable().scaledToFill()
-                        .frame(height: 160).clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+            stackedPhotos
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        isPhotosExpanded = true
+                    }
                 }
+        }
+    }
+
+    // Expanded view: all picked photos laid out horizontally, scrolled one at a time.
+    private var photoStrip: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: Spacing.md) {
+                ForEach(Array(sourceImages.enumerated()), id: \.offset) { _, img in
+                    photoCard(img)
+                        .containerRelativeFrame(.horizontal, count: 4, span: 3, spacing: Spacing.md)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func photoCard(_ img: UIImage) -> some View {
+        Image(uiImage: img)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+    }
+
+    // Multiple picked photos fan out as an overlapping deck, each card rotated a
+    // little around the centre so the stack reads as a pile.
+    private var stackedPhotos: some View {
+        let count = sourceImages.count
+        return ZStack {
+            ForEach(Array(sourceImages.enumerated()), id: \.offset) { index, img in
+                photoCard(img)
+                    .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
+                    .rotationEffect(.degrees((Double(index) - Double(count - 1) / 2) * 7))
+                    .zIndex(Double(index))
             }
         }
+        .padding(Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // Area shown after generating: one cell per job, each progressing independently.
     @ViewBuilder private var resultsGrid: some View {
-        LazyVGrid(columns: columns, spacing: Spacing.md) {
-            ForEach(poller.items) { item in
-                resultCell(item)
-                    .frame(height: 160)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.avoraSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        filledGrid(poller.items) { item in
+            resultCell(item)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.avoraSurface)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        }
+    }
+
+    // Lays items out in rows of two, each cell sharing the available width and height
+    // equally. A single item therefore fills the whole area; more than one forms a grid.
+    @ViewBuilder private func filledGrid<T, Content: View>(
+        _ items: [T], @ViewBuilder content: @escaping (T) -> Content
+    ) -> some View {
+        let rows = stride(from: 0, to: items.count, by: 2).map { start in
+            Array(items[start..<min(start + 2, items.count)].enumerated().map { ($0.offset + start, $0.element) })
+        }
+        VStack(spacing: Spacing.md) {
+            ForEach(rows, id: \.first!.0) { row in
+                HStack(spacing: Spacing.md) {
+                    ForEach(row, id: \.0) { _, item in content(item) }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }
@@ -165,6 +222,7 @@ struct CreateView: View {
             }
         }
         sourceImages = imgs
+        isPhotosExpanded = false
         poller.stop()
         poller = BatchGenerationPoller()
         errorText = nil
@@ -222,6 +280,7 @@ struct CreateView: View {
         poller = BatchGenerationPoller()
         pickerItems = []
         sourceImages = []
+        isPhotosExpanded = false
         errorText = nil
     }
 }
