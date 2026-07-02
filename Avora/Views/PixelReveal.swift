@@ -44,11 +44,11 @@ struct PixelReveal: View {
 
     // Ramp from sharp to full blocks, then breathe at max until the result lands.
     private func startPixelating() {
-        withAnimation(.easeInOut(duration: 7.0)) {
+        withAnimation(.easeInOut(duration: 12.0)) {
             blockSize = maxBlock
         } completion: {
             guard resultImage == nil, isGenerating else { return }
-            withAnimation(.easeInOut(duration: 3.5).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: 6.0).repeatForever(autoreverses: true)) {
                 blockSize = maxBlock - pulseDip
             }
         }
