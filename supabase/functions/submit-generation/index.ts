@@ -54,6 +54,14 @@ Deno.serve(async (req) => {
   const okSize = size <= 10 * 1024 * 1024; // 10 MB cap
   if (!okType || !okSize) return json({ error: "invalid_input" }, 400);
 
+  // Per-generation cost is the single source of truth in credit_config; read it
+  // live so the stored charged_amount matches what deduct_credit actually deducts.
+  // Read before charging so a config-read failure aborts before any deduction.
+  const { data: cfg, error: cfgErr } = await db.from("credit_config")
+    .select("generation_cost").single();
+  if (cfgErr || !cfg) return json({ error: "config_unavailable" }, 500);
+  const cost = cfg.generation_cost as number;
+
   // webhook backstop, then atomic deduction
   await db.rpc("lazy_weekly_reset", { p_uid: uid });
   const { data: bucket, error: deductErr } = await db.rpc("deduct_credit", { p_uid: uid });
@@ -67,13 +75,13 @@ Deno.serve(async (req) => {
 
   const { data: gen, error: insErr } = await db.from("generations").insert({
     user_id: uid, style_id, status: "pending",
-    charged_bucket: bucket, charged_amount: 25,
+    charged_bucket: bucket, charged_amount: cost,
     input_path, quality: style.default_quality,
   }).select("id").single();
   if (insErr || !gen) {
     // compensate: refund directly since no row persisted — re-credit the charged bucket.
     try {
-      await db.rpc("refund_credit_direct", { p_uid: uid, p_bucket: bucket, p_amount: 25 });
+      await db.rpc("refund_credit_direct", { p_uid: uid, p_bucket: bucket, p_amount: cost });
     } catch (refundErr) {
       console.error("compensating refund failed", { uid, bucket, error: refundErr });
     }

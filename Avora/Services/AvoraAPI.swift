@@ -65,6 +65,22 @@ struct AvoraAPI {
         }
     }
 
+    func submitBatch(styleId: String, inputPaths: [String]) async throws -> [UUID] {
+        struct Body: Encodable { let style_id: String; let input_paths: [String] }
+        struct Resp: Decodable { let job_ids: [UUID] }
+        do {
+            let resp: Resp = try await db.functions.invoke(
+                "submit-generation-batch",
+                options: .init(body: Body(style_id: styleId, input_paths: inputPaths))
+            )
+            return resp.job_ids
+        } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
+            throw AvoraError.insufficientCredits
+        } catch let FunctionsError.httpError(code: code, data: _) {
+            throw AvoraError.server(code)
+        }
+    }
+
     func poll(jobId: UUID) async throws -> GenerationResult {
         try await db.functions.invoke(
             "get-generation",
