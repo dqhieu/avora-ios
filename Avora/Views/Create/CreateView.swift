@@ -12,6 +12,7 @@ struct CreateView: View {
     @State private var errorText: String?
     @State private var isSubmitting = false
     @State private var isPhotosExpanded = false
+    @State private var quality: GenerationQuality = .default
 
     init(route: CreateRoute) {
         self.style = route.style
@@ -165,6 +166,30 @@ struct CreateView: View {
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
     }
 
+    // Compact glass menu, left of the Generate button. Each option shows its
+    // per-image credit cost so pricing is transparent before choosing.
+    private var qualityMenu: some View {
+        Menu {
+            Picker("Quality", selection: $quality) {
+                ForEach(GenerationQuality.allCases) { q in
+                    Text("\(q.label) · \(app.config.cost(for: q))").tag(q)
+                }
+            }
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Text(quality.label)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.avoraCaption)
+            }
+            .font(.avoraButton)
+            .foregroundStyle(Color.avoraTextPrimary)
+            .padding(.horizontal, Spacing.md)
+            .frame(minHeight: 56)
+            .avoraGlass(in: Capsule())
+        }
+        .disabled(isWorking)
+    }
+
     @ViewBuilder private var controls: some View {
         if poller.allTerminal {
             HStack {
@@ -180,24 +205,28 @@ struct CreateView: View {
                 .tint(Color.avoraAccent)
             }
         } else {
-            AvoraPrimaryButton { Task { await generate() } } label: {
-                if isWorking {
-                    HStack(spacing: Spacing.sm) {
-                        ProgressView().tint(Color.avoraOnAccent)
-                        GeneratingLabel(isActive: isWorking)
-                    }
-                } else {
-                    VStack(spacing: Spacing.xs) {
-                        Label("Generate", systemImage: "wand.and.stars")
-                        Text("\(sourceImages.count * app.config.generationCost) credits")
-                            .font(.avoraCaption)
-                            .opacity(0.85)
-                            .contentTransition(.numericText())
-                            .animation(.snappy, value: sourceImages.count)
+            HStack(spacing: Spacing.md) {
+                qualityMenu
+                AvoraPrimaryButton { Task { await generate() } } label: {
+                    if isWorking {
+                        HStack(spacing: Spacing.sm) {
+                            ProgressView().tint(Color.avoraOnAccent)
+                            GeneratingLabel(isActive: isWorking)
+                        }
+                    } else {
+                        VStack(spacing: Spacing.xs) {
+                            Label("Generate", systemImage: "wand.and.stars")
+                            Text("\(sourceImages.count * app.config.cost(for: quality)) credits")
+                                .font(.avoraCaption)
+                                .opacity(0.85)
+                                .contentTransition(.numericText())
+                                .animation(.snappy, value: sourceImages.count)
+                                .animation(.snappy, value: quality)
+                        }
                     }
                 }
+                .disabled(sourceImages.isEmpty || isWorking)
             }
-            .disabled(sourceImages.isEmpty || isWorking)
         }
         if let errorText {
             Text(errorText).foregroundStyle(Color.avoraError).font(.avoraFootnote)
@@ -222,7 +251,7 @@ struct CreateView: View {
     private func generate() async {
         let imgs = sourceImages
         guard !imgs.isEmpty, !isSubmitting else { return }
-        let cost = imgs.count * app.config.generationCost
+        let cost = imgs.count * app.config.cost(for: quality)
         guard (app.profile?.totalCredits ?? 0) >= cost else { showPaywall = true; return }
         isSubmitting = true
         defer { isSubmitting = false }
@@ -244,7 +273,8 @@ struct CreateView: View {
                 for try await (i, path) in group { byIndex[i] = path }
                 return payloads.indices.map { byIndex[$0]! }
             }
-            let jobIds = try await AvoraAPI.shared.submitBatch(styleId: style.id, inputPaths: paths)
+            let jobIds = try await AvoraAPI.shared.submitBatch(
+                styleId: style.id, inputPaths: paths, quality: quality.backend)
             poller.start(jobIds: jobIds, poll: { try await AvoraAPI.shared.poll(jobId: $0) })
         } catch AvoraError.insufficientCredits {
             showPaywall = true
