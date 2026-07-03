@@ -192,6 +192,8 @@ struct CreateView: View {
                         Text("\(sourceImages.count * app.config.generationCost) credits")
                             .font(.avoraCaption)
                             .opacity(0.85)
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: sourceImages.count)
                     }
                 }
             }
