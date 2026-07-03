@@ -59,11 +59,11 @@ struct FocusReveal: View {
         do {
             let img = try await ImageStore.shared.image(for: resultPath)
             resultImage = img
-            withAnimation(.easeOut(duration: 0.8)) { resultOpacity = 1 }
-            withAnimation(.easeInOut(duration: 3.0).delay(0.4)) { blurRadius = 0 }
+            withAnimation(.easeOut(duration: 0.5)) { resultOpacity = 1 }
+            withAnimation(.easeInOut(duration: 1.2).delay(0.2)) { blurRadius = 0 }
         } catch {
             // Download failed: pull the source back into focus so the user still sees a photo.
-            withAnimation(.easeInOut(duration: 3.0)) { blurRadius = 0 }
+            withAnimation(.easeInOut(duration: 1.2)) { blurRadius = 0 }
         }
     }
 }
