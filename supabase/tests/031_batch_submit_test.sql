@@ -1,46 +1,91 @@
 begin;
-select plan(9);
+select plan(14);
 
 insert into auth.users (id, email) values ('55555555-5555-5555-5555-555555555555','e@test.dev');
--- profile auto-created; set a balance that forces a batch to straddle both buckets
-update public.profiles set weekly_credits = 30, extra_credits = 20
-  where id = '55555555-5555-5555-5555-555555555555';
 insert into public.styles (id, name, prompt_template) values ('bs1','BS1','x');
--- credit_config.generation_cost defaults to 20
+-- credit_config seeds cost_low=20, cost_medium=30, cost_high=100
 
--- batch of 2: needed 40; weekly(30) covers one row, extra(20) covers the other
+-- LOW: 20/img. weekly 100, batch of 2 low = 40 -> weekly 60.
+update public.profiles set weekly_credits = 100, extra_credits = 0
+  where id = '55555555-5555-5555-5555-555555555555';
+select is(
+  array_length(
+    submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
+      array['55555555-5555-5555-5555-555555555555/a.png',
+            '55555555-5555-5555-5555-555555555555/b.png'], 'low'), 1),
+  2, 'low: returns 2 job ids');
+select is((select weekly_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
+          60, 'low: weekly 100 -> 60 (2 x 20)');
+select is((select count(*)::int from public.generations
+             where user_id='55555555-5555-5555-5555-555555555555'
+               and charged_amount=20 and quality='low'),
+          2, 'low: each row charged 20 and stored quality low');
+
+-- MEDIUM: 30/img. reset weekly 100, batch of 2 medium = 60 -> weekly 40.
+delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
+update public.profiles set weekly_credits = 100, extra_credits = 0
+  where id = '55555555-5555-5555-5555-555555555555';
 select is(
   array_length(
     submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
       array['55555555-5555-5555-5555-555555555555/a.png',
             '55555555-5555-5555-5555-555555555555/b.png'], 'medium'), 1),
-  2, 'returns 2 job ids');
+  2, 'medium: returns 2 job ids');
 select is((select weekly_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
-          10, 'weekly 30 -> 10 (one row charged weekly)');
-select is((select extra_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
-          0, 'extra 20 -> 0 (one row charged extra)');
+          40, 'medium: weekly 100 -> 40 (2 x 30)');
 select is((select count(*)::int from public.generations
-             where user_id='55555555-5555-5555-5555-555555555555'),
-          2, 'two generation rows inserted');
+             where user_id='55555555-5555-5555-5555-555555555555'
+               and charged_amount=30 and quality='medium'),
+          2, 'medium: each row charged 30 and stored quality medium');
+
+-- HIGH: 100/img. reset weekly 100, batch of 1 high = 100 -> weekly 0.
+delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
+update public.profiles set weekly_credits = 100, extra_credits = 0
+  where id = '55555555-5555-5555-5555-555555555555';
+select is(
+  array_length(
+    submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
+      array['55555555-5555-5555-5555-555555555555/a.png'], 'high'), 1),
+  1, 'high: returns 1 job id');
+select is((select weekly_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
+          0, 'high: weekly 100 -> 0 (1 x 100)');
+select is((select count(*)::int from public.generations
+             where user_id='55555555-5555-5555-5555-555555555555'
+               and charged_amount=100 and quality='high'),
+          1, 'high: row charged 100 and stored quality high');
+
+-- STRADDLE at medium: weekly 30 + extra 30, batch of 2 medium = 60 -> one weekly, one extra.
+delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
+update public.profiles set weekly_credits = 30, extra_credits = 30
+  where id = '55555555-5555-5555-5555-555555555555';
+do $$ begin
+  perform submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
+    array['55555555-5555-5555-5555-555555555555/a.png',
+          '55555555-5555-5555-5555-555555555555/b.png'], 'medium');
+end $$;
 select is((select count(*)::int from public.generations
              where user_id='55555555-5555-5555-5555-555555555555' and charged_bucket='weekly'),
-          1, 'one row charged to weekly bucket');
+          1, 'straddle: one row charged to weekly');
 select is((select count(*)::int from public.generations
              where user_id='55555555-5555-5555-5555-555555555555' and charged_bucket='extra'),
-          1, 'one row charged to extra bucket');
-select is((select count(*)::int from public.generations
-             where user_id='55555555-5555-5555-5555-555555555555' and charged_amount=20),
-          2, 'each row charged the config cost (20)');
+          1, 'straddle: one row charged to extra');
 
--- insufficient: total < needed raises P0001 and deducts nothing
-update public.profiles set weekly_credits = 10, extra_credits = 0
+-- BAD QUALITY: raises before any credit math (fires even with 0 credits).
+select throws_ok(
+  $$ select submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
+       array['55555555-5555-5555-5555-555555555555/c.png'], 'ultra') $$,
+  'P0001', 'bad_quality', 'unknown quality raises bad_quality');
+
+-- INSUFFICIENT: high needs 100, only 50 available -> raises and deducts nothing.
+delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
+update public.profiles set weekly_credits = 50, extra_credits = 0
   where id = '55555555-5555-5555-5555-555555555555';
 select throws_ok(
   $$ select submit_generations_batch('55555555-5555-5555-5555-555555555555','bs1',
-       array['55555555-5555-5555-5555-555555555555/c.png'], 'medium') $$,
-  'P0001', 'insufficient_credits', 'raises when total < needed');
+       array['55555555-5555-5555-5555-555555555555/d.png'], 'high') $$,
+  'P0001', 'insufficient_credits', 'high raises when total < needed');
 select is((select weekly_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
-          10, 'weekly untouched after failed batch (all-or-nothing)');
+          50, 'weekly untouched after failed high batch (all-or-nothing)');
 
 select * from finish();
 rollback;

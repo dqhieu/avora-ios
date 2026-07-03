@@ -10,8 +10,12 @@ Deno.serve(async (req) => {
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* leave empty */ }
-  const { style_id, input_paths } = body;
+  const { style_id, input_paths, quality } = body;
   if (typeof style_id !== "string" || !Array.isArray(input_paths)) {
+    return json({ error: "bad_request" }, 400);
+  }
+  // Cost is derived server-side from this value, so it must be validated here.
+  if (typeof quality !== "string" || !["low", "medium", "high"].includes(quality)) {
     return json({ error: "bad_request" }, 400);
   }
   if (input_paths.length < 1 || input_paths.length > 4 ||
@@ -27,7 +31,7 @@ Deno.serve(async (req) => {
 
   // style must exist and be active
   const { data: style } = await db.from("styles")
-    .select("id, default_quality, active").eq("id", style_id).single();
+    .select("id, active").eq("id", style_id).single();
   if (!style || !style.active) return json({ error: "unknown_style" }, 400);
 
   // validate each input file (format/size) via Storage list + metadata
@@ -52,7 +56,7 @@ Deno.serve(async (req) => {
     p_uid: uid,
     p_style_id: style_id,
     p_input_paths: input_paths,
-    p_quality: style.default_quality,
+    p_quality: quality,
   });
   if (rpcErr) {
     if (rpcErr.code === "P0001" && rpcErr.message.includes("insufficient_credits"))

@@ -35,7 +35,7 @@ struct AvoraAPI {
 
     func fetchCreditConfig() async throws -> CreditConfig {
         try await db.from("credit_config")
-            .select("weekly_amount,signup_extra,generation_cost,extra_pack")
+            .select("weekly_amount,signup_extra,generation_cost,extra_pack,cost_low,cost_medium,cost_high")
             .single()
             .execute()
             .value
@@ -52,32 +52,16 @@ struct AvoraAPI {
         return path
     }
 
-    func submit(styleId: String, inputPath: String) async throws -> UUID {
-        struct Body: Encodable { let style_id: String; let input_path: String }
-        struct Resp: Decodable { let job_id: UUID }
-        do {
-            let resp: Resp = try await db.functions.invoke(
-                "submit-generation",
-                options: .init(body: Body(style_id: styleId, input_path: inputPath))
-            )
-            return resp.job_id
-        } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
-            throw AvoraError.insufficientCredits
-        } catch let FunctionsError.httpError(code: code, data: _) {
-            throw AvoraError.server(code)
-        }
-    }
-
-    func submitBatch(styleId: String, inputPaths: [String]) async throws -> [UUID] {
+    func submitBatch(styleId: String, inputPaths: [String], quality: String) async throws -> [UUID] {
         #if DEBUG
         if AvoraConfig.isMockGenerationEnabled { return inputPaths.map { _ in UUID() } }
         #endif
-        struct Body: Encodable { let style_id: String; let input_paths: [String] }
+        struct Body: Encodable { let style_id: String; let input_paths: [String]; let quality: String }
         struct Resp: Decodable { let job_ids: [UUID] }
         do {
             let resp: Resp = try await db.functions.invoke(
                 "submit-generation-batch",
-                options: .init(body: Body(style_id: styleId, input_paths: inputPaths))
+                options: .init(body: Body(style_id: styleId, input_paths: inputPaths, quality: quality))
             )
             return resp.job_ids
         } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
