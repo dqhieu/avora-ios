@@ -7,6 +7,7 @@ struct CollectionView: View {
     @State private var nextCursor: Date?
     @State private var loading = false
     @State private var reloadToken = 0
+    @State private var hasLoaded = false
     @State private var showSettings = false
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
@@ -35,7 +36,7 @@ struct CollectionView: View {
             NavigationStack { SettingsView().environment(app) }
         }
         .overlay {
-            if items.isEmpty && !loading {
+            if items.isEmpty && hasLoaded {
                 ContentUnavailableView(
                     "No creations yet",
                     systemImage: "square.grid.2x2",
@@ -43,7 +44,15 @@ struct CollectionView: View {
                 )
             }
         }
-        .task { if items.isEmpty { await loadMore() } }
+        .task {
+            // Paint instantly from the last snapshot, then reconcile once from
+            // the network. hasLoaded is flipped after the refresh so the empty
+            // state can't flash during a first-ever load with no snapshot.
+            if items.isEmpty { items = SnapshotStore.loadCollection() ?? [] }
+            guard !hasLoaded else { return }
+            await refresh()
+            hasLoaded = true
+        }
         .refreshable { await refresh() }
     }
 
@@ -69,6 +78,7 @@ struct CollectionView: View {
         if let (page, next) = try? await AvoraAPI.shared.listGenerations(cursor: nil) {
             items = page
             nextCursor = next
+            SnapshotStore.saveCollection(page)
         }
     }
 }
