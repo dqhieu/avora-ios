@@ -52,22 +52,6 @@ struct AvoraAPI {
         return path
     }
 
-    func submit(styleId: String, inputPath: String) async throws -> UUID {
-        struct Body: Encodable { let style_id: String; let input_path: String }
-        struct Resp: Decodable { let job_id: UUID }
-        do {
-            let resp: Resp = try await db.functions.invoke(
-                "submit-generation",
-                options: .init(body: Body(style_id: styleId, input_path: inputPath))
-            )
-            return resp.job_id
-        } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
-            throw AvoraError.insufficientCredits
-        } catch let FunctionsError.httpError(code: code, data: _) {
-            throw AvoraError.server(code)
-        }
-    }
-
     func submitBatch(styleId: String, inputPaths: [String], quality: String) async throws -> [UUID] {
         #if DEBUG
         if AvoraConfig.isMockGenerationEnabled { return inputPaths.map { _ in UUID() } }
