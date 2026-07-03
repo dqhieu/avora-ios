@@ -184,7 +184,7 @@ struct CreateView: View {
                 if isWorking {
                     HStack(spacing: Spacing.sm) {
                         ProgressView().tint(Color.avoraOnAccent)
-                        Text("Generating…")
+                        GeneratingLabel(isActive: isWorking)
                     }
                 } else {
                     VStack(spacing: Spacing.xs) {
