@@ -184,7 +184,7 @@ struct CreateView: View {
                 if isWorking {
                     HStack(spacing: Spacing.sm) {
                         ProgressView().tint(Color.avoraOnAccent)
-                        Text("Generating…")
+                        GeneratingLabel(isActive: isWorking)
                     }
                 } else {
                     VStack(spacing: Spacing.xs) {
@@ -192,6 +192,8 @@ struct CreateView: View {
                         Text("\(sourceImages.count * app.config.generationCost) credits")
                             .font(.avoraCaption)
                             .opacity(0.85)
+                            .contentTransition(.numericText())
+                            .animation(.snappy, value: sourceImages.count)
                     }
                 }
             }
