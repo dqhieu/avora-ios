@@ -6,6 +6,7 @@ struct CollectionView: View {
     @State private var items: [Generation] = []
     @State private var nextCursor: Date?
     @State private var loading = false
+    @State private var reloadToken = 0
     @State private var showSettings = false
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
@@ -43,16 +44,30 @@ struct CollectionView: View {
             }
         }
         .task { if items.isEmpty { await loadMore() } }
-        .refreshable { items = []; nextCursor = nil; await loadMore() }
+        .refreshable { await refresh() }
     }
 
     private func loadMore() async {
         guard !loading else { return }
         loading = true
         defer { loading = false }
+        let token = reloadToken
         if let (page, next) = try? await AvoraAPI.shared.listGenerations(cursor: nextCursor) {
+            // A refresh landed while this page was in flight — drop the stale page
+            // rather than appending it onto the freshly loaded collection.
+            guard token == reloadToken else { return }
             let seen = Set(items.map(\.id))
             items += page.filter { !seen.contains($0.id) }
+            nextCursor = next
+        }
+    }
+
+    // Load the first page into place without blanking the list first, so a failed
+    // or in-flight-superseded refresh can't leave the collection stuck empty.
+    private func refresh() async {
+        reloadToken += 1
+        if let (page, next) = try? await AvoraAPI.shared.listGenerations(cursor: nil) {
+            items = page
             nextCursor = next
         }
     }
