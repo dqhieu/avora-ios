@@ -176,19 +176,18 @@ struct CreateView: View {
                 }
             }
         } label: {
-            // Two lines mirroring the Generate button (bold value on top, dimmed
-            // caption below) so the control reads as "Quality: <value>" and its
-            // baselines line up with "Generate" / "N credits" beside it.
+            // Two lines: a dimmed "Quality" field label on top with the bold
+            // value + chevron below, so the control reads as "Quality: <value>".
             VStack(spacing: Spacing.xs) {
+                Text("Quality")
+                    .font(.avoraCaption)
+                    .opacity(0.85)
                 HStack(spacing: Spacing.xs) {
                     Text(quality.label)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.avoraCaption)
                 }
                 .font(.avoraButton)
-                Text("Quality")
-                    .font(.avoraCaption)
-                    .opacity(0.85)
             }
             .foregroundStyle(Color.avoraTextPrimary)
             .padding(.horizontal, Spacing.md)
