@@ -34,8 +34,9 @@ struct CreateView: View {
         VStack(spacing: Spacing.lg) {
             photoArea
             controls
+                .padding(.horizontal, Spacing.lg)
         }
-        .padding(Spacing.lg)
+        .padding(.vertical, Spacing.lg)
         .navigationTitle(style.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
