@@ -5,6 +5,9 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDelete = false
     @State private var deleteError: String?
+    #if DEBUG
+    @AppStorage(AvoraConfig.mockGenerationKey) private var mockGeneration = false
+    #endif
 
     var body: some View {
         List {
@@ -30,6 +33,11 @@ struct SettingsView: View {
                     Task { await app.signOut() }
                 }
             }
+            #if DEBUG
+            Section("Developer") {
+                Toggle("Mock generation", isOn: $mockGeneration)
+            }
+            #endif
             Section {
                 Button("Delete Account", role: .destructive) {
                     confirmDelete = true
