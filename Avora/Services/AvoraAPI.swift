@@ -68,16 +68,16 @@ struct AvoraAPI {
         }
     }
 
-    func submitBatch(styleId: String, inputPaths: [String]) async throws -> [UUID] {
+    func submitBatch(styleId: String, inputPaths: [String], quality: String) async throws -> [UUID] {
         #if DEBUG
         if AvoraConfig.isMockGenerationEnabled { return inputPaths.map { _ in UUID() } }
         #endif
-        struct Body: Encodable { let style_id: String; let input_paths: [String] }
+        struct Body: Encodable { let style_id: String; let input_paths: [String]; let quality: String }
         struct Resp: Decodable { let job_ids: [UUID] }
         do {
             let resp: Resp = try await db.functions.invoke(
                 "submit-generation-batch",
-                options: .init(body: Body(style_id: styleId, input_paths: inputPaths))
+                options: .init(body: Body(style_id: styleId, input_paths: inputPaths, quality: quality))
             )
             return resp.job_ids
         } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
