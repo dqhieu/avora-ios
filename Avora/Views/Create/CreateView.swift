@@ -172,16 +172,24 @@ struct CreateView: View {
         Menu {
             Picker("Quality", selection: $quality) {
                 ForEach(GenerationQuality.allCases) { q in
-                    Text("\(q.label) · \(app.config.cost(for: q))").tag(q)
+                    Text("\(q.label) · \(app.config.cost(for: q)) credits").tag(q)
                 }
             }
         } label: {
-            HStack(spacing: Spacing.xs) {
-                Text(quality.label)
-                Image(systemName: "chevron.up.chevron.down")
+            // Two lines mirroring the Generate button (bold value on top, dimmed
+            // caption below) so the control reads as "Quality: <value>" and its
+            // baselines line up with "Generate" / "N credits" beside it.
+            VStack(spacing: Spacing.xs) {
+                HStack(spacing: Spacing.xs) {
+                    Text(quality.label)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.avoraCaption)
+                }
+                .font(.avoraButton)
+                Text("Quality")
                     .font(.avoraCaption)
+                    .opacity(0.85)
             }
-            .font(.avoraButton)
             .foregroundStyle(Color.avoraTextPrimary)
             .padding(.horizontal, Spacing.md)
             .frame(minHeight: 56)
