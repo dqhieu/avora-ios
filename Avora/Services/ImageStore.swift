@@ -32,6 +32,12 @@ actor ImageStore {
     }
 
     func image(for path: String, source: Source = .output) async throws -> UIImage {
+        #if DEBUG
+        if path.hasPrefix("mock://") {
+            if let img = UIImage(named: await AvoraConfig.mockResultAssetName) { return img }
+            throw Failure.decode
+        }
+        #endif
         let cacheKey = "\(source):\(path)"
         let key = cacheKey as NSString
         if let cached = memory.object(forKey: key) { return cached }

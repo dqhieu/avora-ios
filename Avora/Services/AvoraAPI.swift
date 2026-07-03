@@ -42,6 +42,9 @@ struct AvoraAPI {
     }
 
     func uploadInput(_ data: Data) async throws -> String {
+        #if DEBUG
+        if AvoraConfig.isMockGenerationEnabled { return "mock://input" }
+        #endif
         let uid = try await currentUserId()
         let path = "\(uid.uuidString.lowercased())/\(UUID().uuidString).png"
         try await db.storage.from("inputs")
@@ -66,6 +69,9 @@ struct AvoraAPI {
     }
 
     func submitBatch(styleId: String, inputPaths: [String]) async throws -> [UUID] {
+        #if DEBUG
+        if AvoraConfig.isMockGenerationEnabled { return inputPaths.map { _ in UUID() } }
+        #endif
         struct Body: Encodable { let style_id: String; let input_paths: [String] }
         struct Resp: Decodable { let job_ids: [UUID] }
         do {
@@ -82,7 +88,13 @@ struct AvoraAPI {
     }
 
     func poll(jobId: UUID) async throws -> GenerationResult {
-        try await db.functions.invoke(
+        #if DEBUG
+        if AvoraConfig.isMockGenerationEnabled {
+            try await Task.sleep(nanoseconds: AvoraConfig.mockGenerationDelayNanos)
+            return GenerationResult(status: .completed, outputPath: AvoraConfig.mockResultPath, errorCode: nil)
+        }
+        #endif
+        return try await db.functions.invoke(
             "get-generation",
             options: .init(
                 method: .get,

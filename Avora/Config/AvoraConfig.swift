@@ -6,3 +6,22 @@ enum AvoraConfig {
     static let functionsBaseURL: URL = supabaseURL.appendingPathComponent("functions/v1")
     static let revenueCatAPIKey: String = "appl_ntflcZHcYyfOpVEQVePRhQzBXQC"
 }
+
+#if DEBUG
+extension AvoraConfig {
+    /// UserDefaults key backing the DEBUG-only "Mock generation" toggle.
+    static let mockGenerationKey = "mockGenerationEnabled"
+
+    /// When on, Generate fakes the whole round-trip instead of hitting the backend.
+    static var isMockGenerationEnabled: Bool {
+        UserDefaults.standard.bool(forKey: mockGenerationKey)
+    }
+
+    /// Simulated backend latency before the fake result is "ready".
+    static let mockGenerationDelayNanos: UInt64 = 10_000_000_000
+
+    /// Sentinel result path; `ImageStore` maps it to the bundled asset below.
+    static let mockResultPath = "mock://result"
+    static let mockResultAssetName = "MockResult"
+}
+#endif
