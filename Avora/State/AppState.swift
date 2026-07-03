@@ -8,9 +8,11 @@ final class AppState {
     // frame already shows the right screen — no waiting on bootstrap().
     var isAuthenticated = SupabaseClientProvider.client.auth.currentSession != nil
     var profile: Profile?
-    // Cached for the session so screens that need styles (grid, creation detail)
-    // share one fetch. Pull-to-refresh on the grid passes force: true.
-    var styles: [Style] = []
+    // Seeded synchronously from the last on-disk snapshot so the styles grid's
+    // first frame already has data; refreshed once per session on first view.
+    // Screens that need styles (grid, creation detail) share that fetch.
+    var styles: [Style] = SnapshotStore.loadStyles() ?? []
+    private var didFetchStyles = false
     // Credit economics fetched from the backend; seeded with fallback defaults
     // so the first frame and offline sessions still work.
     var config: CreditConfig = .fallback
@@ -49,8 +51,10 @@ final class AppState {
     }
 
     func loadStyles(force: Bool = false) async throws {
-        if !force, !styles.isEmpty { return }
+        if !force, didFetchStyles { return }
         styles = try await AvoraAPI.shared.fetchStyles()
+        didFetchStyles = true
+        SnapshotStore.saveStyles(styles)
     }
 
     func style(id: String) -> Style? {
@@ -66,5 +70,6 @@ final class AppState {
         try? await SupabaseClientProvider.client.auth.signOut()
         isAuthenticated = false
         profile = nil
+        SnapshotStore.clearCollection()
     }
 }
