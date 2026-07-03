@@ -1,6 +1,9 @@
 import { json } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 import { runEdit, OpenAIError } from "../_shared/openai.ts";
+import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
+
+const JPEG_QUALITY = Number(Deno.env.get("OUTPUT_JPEG_QUALITY") ?? "85");
 
 const VISIBILITY = 120;          // seconds a claimed job is hidden
 const MAX_BATCH = Number(Deno.env.get("WORKER_MAX_BATCH") ?? "5");   // <= tier IPM
@@ -44,9 +47,10 @@ Deno.serve(async () => {
         prompt: style!.prompt_template, size: style!.default_size, quality: gen.quality,
       });
 
-      const outPath = `${gen.user_id}/${jobId}.png`;
-      await db.storage.from("outputs").upload(outPath, decodeB64(result.b64), {
-        contentType: "image/png", upsert: true,
+      const jpeg = await toJpeg(decodeB64(result.b64));
+      const outPath = `${gen.user_id}/${jobId}.jpg`;
+      await db.storage.from("outputs").upload(outPath, jpeg, {
+        contentType: "image/jpeg", upsert: true,
       });
 
       await db.from("generations").update({
@@ -84,6 +88,14 @@ function decodeB64(b64: string): Uint8Array {
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
+}
+
+// Re-encode the PNG returned by the image model as JPEG to shrink stored file size.
+// gpt-image outputs are opaque (no transparent background requested), so dropping
+// the alpha channel is safe.
+async function toJpeg(pngBytes: Uint8Array): Promise<Uint8Array> {
+  const img = await Image.decode(pngBytes);
+  return await img.encodeJPEG(JPEG_QUALITY);
 }
 
 async function archive(db: ReturnType<typeof serviceClient>, msgId: number) {
