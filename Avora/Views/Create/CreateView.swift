@@ -179,15 +179,15 @@ struct CreateView: View {
             // Two lines: a bold "Quality" label on top with the dimmed value +
             // chevron caption below, so the control reads as "Quality: <value>".
             VStack(spacing: Spacing.xs) {
-                Text("Quality")
-                    .font(.avoraButton)
                 HStack(spacing: Spacing.xs) {
-                    Text(quality.label)
+                    Text("Quality")
+                        .font(.avoraButton)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.avoraCaption)
                 }
-                .font(.avoraCaption)
-                .opacity(0.85)
+                Text(quality.label)
+                    .font(.avoraCaption)
+                    .opacity(0.85)
             }
             .foregroundStyle(Color.avoraTextPrimary)
             .padding(.horizontal, Spacing.md)
