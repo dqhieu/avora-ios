@@ -176,18 +176,18 @@ struct CreateView: View {
                 }
             }
         } label: {
-            // Two lines: a dimmed "Quality" field label on top with the bold
-            // value + chevron below, so the control reads as "Quality: <value>".
+            // Two lines: a bold "Quality" label on top with the dimmed value +
+            // chevron caption below, so the control reads as "Quality: <value>".
             VStack(spacing: Spacing.xs) {
                 Text("Quality")
-                    .font(.avoraCaption)
-                    .opacity(0.85)
+                    .font(.avoraButton)
                 HStack(spacing: Spacing.xs) {
                     Text(quality.label)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.avoraCaption)
                 }
-                .font(.avoraButton)
+                .font(.avoraCaption)
+                .opacity(0.85)
             }
             .foregroundStyle(Color.avoraTextPrimary)
             .padding(.horizontal, Spacing.md)
@@ -223,12 +223,14 @@ struct CreateView: View {
                     } else {
                         VStack(spacing: Spacing.xs) {
                             Label("Generate", systemImage: "wand.and.stars")
-                            Text("\(sourceImages.count * app.config.cost(for: quality)) credits")
-                                .font(.avoraCaption)
-                                .opacity(0.85)
-                                .contentTransition(.numericText())
-                                .animation(.snappy, value: sourceImages.count)
-                                .animation(.snappy, value: quality)
+                            if !sourceImages.isEmpty {
+                                Text("\(sourceImages.count * app.config.cost(for: quality)) credits")
+                                  .font(.avoraCaption)
+                                  .opacity(0.85)
+                                  .contentTransition(.numericText())
+                                  .animation(.snappy, value: sourceImages.count)
+                                  .animation(.snappy, value: quality)
+                            }
                         }
                     }
                 }
