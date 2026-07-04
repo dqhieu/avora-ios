@@ -16,12 +16,6 @@ struct SettingsView: View {
                     LabeledContent("Email", value: email)
                 }
             }
-            if let p = app.profile {
-                Section("Credits") {
-                    LabeledContent("Weekly", value: "\(p.weeklyCredits)")
-                    LabeledContent("Extra", value: "\(p.extraCredits)")
-                }
-            }
             Section {
                 Button("Restore Purchases") {
                     Task {

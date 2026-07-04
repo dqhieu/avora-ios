@@ -15,6 +15,7 @@ struct CreditsView: View {
     @State private var purchasedCredits: Int?
     @State private var showConfirmation = false
     @State private var purchaseError: String?
+    @State private var showBreakdown = false
 
     private let cols = [GridItem(.flexible(), spacing: Spacing.md),
                         GridItem(.flexible(), spacing: Spacing.md)]
@@ -89,14 +90,33 @@ struct CreditsView: View {
     }
 
     private var balanceHeader: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
-            Image(systemName: "centsign")
-                .font(.largeTitle)
-            Text(app.profile?.totalCredits ?? 0, format: .number)
-                .font(.avoraHeroSans)
+        Button { showBreakdown = true } label: {
+            HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
+                Image(systemName: "centsign")
+                    .font(.largeTitle)
+                Text(app.profile?.totalCredits ?? 0, format: .number)
+                    .font(.avoraHeroSans)
+            }
+            .foregroundStyle(Color.avoraTextPrimary)
+            .padding(.vertical, Spacing.lg)
         }
+        .buttonStyle(.plain)
+        .disabled(app.profile == nil)
+        .popover(isPresented: $showBreakdown) {
+            breakdownPopover
+        }
+    }
+
+    private var breakdownPopover: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            LabeledContent("Weekly", value: "\(app.profile?.weeklyCredits ?? 0)")
+            LabeledContent("Extra", value: "\(app.profile?.extraCredits ?? 0)")
+        }
+        .font(.avoraSubheadline)
         .foregroundStyle(Color.avoraTextPrimary)
-        .padding(.vertical, Spacing.lg)
+        .padding(Spacing.lg)
+        .frame(minWidth: 180)
+        .presentationCompactAdaptation(.popover)
     }
 
     private var sectionLabel: some View {
