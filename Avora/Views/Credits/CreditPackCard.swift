@@ -56,23 +56,17 @@ struct CreditTicketCard: View {
         .frame(height: height)
         .foregroundStyle(Color.avoraTicketInk)
         .background(Color.avoraTicketYellow, in: NotchedRectangle(notchRadius: notch))
-        .overlay(NotchedRectangle(notchRadius: notch).strokeBorder(Color.avoraTicketInk, lineWidth: 2))
-        .overlay(
-            NotchedRectangle(notchRadius: notch - 2)
-                .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [1, 3]))
-                .foregroundStyle(Color.avoraTicketInk.opacity(0.55))
-                .padding(6)
-        )
+        .overlay(NotchedRectangle(notchRadius: notch).strokeBorder(Color.avoraTicketInk, lineWidth: 1))
     }
 
     @ViewBuilder private var centerContent: some View {
         if prominent {
             VStack(spacing: Spacing.xs) {
-                Text("✦  BEST VALUE  ✦").font(.avoraCaption2).tracking(3)
+                Text("✦  BEST VALUE  ✦").font(.avoraHeadline).tracking(3)
                 rule
                 Text(pack.credits, format: .number).font(.avoraNumberLarge.monospacedDigit())
                 rule
-                Text(footerText).font(.avoraCaption2).tracking(1)
+                Text(footerText).font(.avoraSubheadline).tracking(1)
             }
             .padding(.horizontal, Spacing.sm)
         } else {

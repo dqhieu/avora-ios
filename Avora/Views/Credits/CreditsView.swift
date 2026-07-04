@@ -32,13 +32,13 @@ struct CreditsView: View {
 
                     if !packOptions.isEmpty {
                         sectionLabel
-                        VStack(spacing: Spacing.md) {
+                        VStack(spacing: Spacing.lg) {
                             if let featuredPack {
                                 CreditTicketCard(pack: featuredPack.display, prominent: true) {
                                     Task { await buy(featuredPack.package) }
                                 }
                             }
-                            LazyVGrid(columns: cols, spacing: Spacing.md) {
+                            LazyVGrid(columns: cols, spacing: Spacing.lg) {
                                 ForEach(standardPacks) { opt in
                                     CreditTicketCard(pack: opt.display, prominent: false) {
                                         Task { await buy(opt.package) }
