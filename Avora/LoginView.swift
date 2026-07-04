@@ -2,7 +2,9 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(AppState.self) private var app
-    @State private var isLoading = false
+    @State private var loadingProvider: LoadingProvider?
+
+    private enum LoadingProvider { case apple, google }
 
     var body: some View {
         ZStack {
@@ -28,13 +30,13 @@ struct LoginView: View {
         AvoraPrimaryButton(action: logIn) {
             loginButtonLabel
         }
-        .disabled(isLoading)
+        .disabled(loadingProvider != nil)
         .preferredColorScheme(.light)
     }
 
     @ViewBuilder
     private var loginButtonLabel: some View {
-        if isLoading {
+        if loadingProvider == .apple {
             ProgressView()
                 .tint(Color.avoraOnAccent)
         } else {
@@ -44,6 +46,18 @@ struct LoginView: View {
 
     private var googleButton: some View {
         AvoraPrimaryButton(action: logInWithGoogle) {
+            googleButtonLabel
+        }
+        .disabled(loadingProvider != nil)
+        .preferredColorScheme(.light)
+    }
+
+    @ViewBuilder
+    private var googleButtonLabel: some View {
+        if loadingProvider == .google {
+            ProgressView()
+                .tint(Color.avoraOnAccent)
+        } else {
             HStack(spacing: 8) {
                 Image("GoogleLogo")
                     .resizable()
@@ -52,8 +66,6 @@ struct LoginView: View {
                 Text("Continue with Google")
             }
         }
-        .disabled(isLoading)
-        .preferredColorScheme(.light)
     }
 
     private func logIn() {
@@ -63,9 +75,9 @@ struct LoginView: View {
               let window = scene.windows.first(where: { $0.isKeyWindow })
         else { return }
 
-        isLoading = true
+        loadingProvider = .apple
         Task {
-            defer { isLoading = false }
+            defer { loadingProvider = nil }
             do {
                 try await AuthService.signInWithApple(presentationAnchor: window)
                 await completeSignIn()
@@ -77,9 +89,9 @@ struct LoginView: View {
 
     private func logInWithGoogle() {
         guard let root = rootViewController() else { return }
-        isLoading = true
+        loadingProvider = .google
         Task {
-            defer { isLoading = false }
+            defer { loadingProvider = nil }
             do {
                 try await AuthService.signInWithGoogle(presenting: root)
                 await completeSignIn()
