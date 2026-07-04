@@ -29,10 +29,10 @@ struct CollectionView: View {
         .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if let credits = app.profile?.totalCredits {
-                    CreditsBalancePill(credits: credits) { showCredits = true }
-                }
+            ToolbarItem(placement: .topBarLeading) {
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
         }

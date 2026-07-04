@@ -31,8 +31,10 @@ struct StylesGridView: View {
         }
         .navigationTitle("Styles")
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarLeading) {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
         }
