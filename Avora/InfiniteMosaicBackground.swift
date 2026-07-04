@@ -10,7 +10,7 @@ import SwiftUI
 struct InfiniteMosaicBackground: View {
   let imageName: String = "LoginBackground"
   let imageSize = CGSize(width: 1080, height: 3840)
-  let speed: CGFloat = 16 // points per second
+  let speed: CGFloat = 24 // points per second
 
   @State private var startDate = Date()
   @Environment(\.accessibilityReduceMotion) private var reduceMotion

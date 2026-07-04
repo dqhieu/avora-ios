@@ -12,18 +12,20 @@ struct SignupBonusCard: View {
         HStack(spacing: 0) {
             stub("BONUS")
                 .frame(width: 34)
+                .padding(.leading, 8)
             separator
             center
                 .frame(maxWidth: .infinity)
             separator
             stub("AVORA")
                 .frame(width: 34)
+                .padding(.trailing, 8)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 148)
         .foregroundStyle(Color.avoraTicketInk)
         .background(Color.avoraTicketYellow, in: NotchedRectangle(notchRadius: notch))
-        .overlay(NotchedRectangle(notchRadius: notch).strokeBorder(Color.avoraTicketInk, lineWidth: 2))
+        .overlay(NotchedRectangle(notchRadius: notch).strokeBorder(Color.avoraTicketInk, lineWidth: 1))
         .overlay(
             NotchedRectangle(notchRadius: notch - 2)
                 .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [1, 3]))
@@ -37,10 +39,12 @@ struct SignupBonusCard: View {
     private var center: some View {
         VStack(spacing: Spacing.xs) {
             Text("✦  SIGN-IN BONUS  ✦").font(.avoraCaption2).tracking(3)
+                .padding(.bottom, 8)
             rule
-            Text(credits, format: .number).font(.avoraLargeTitle.monospacedDigit())
+            Text(credits, format: .number).font(.avoraNumberLarge.monospacedDigit())
             rule
             Text("FREE CREDITS").font(.avoraCaption2).tracking(2)
+                .padding(.top, 8)
         }
         .padding(.horizontal, Spacing.sm)
     }

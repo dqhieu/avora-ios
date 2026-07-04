@@ -16,7 +16,8 @@ struct SignupBonusModal: View {
             // intentionally absorb taps, blocking interaction with the app
             // behind the modal — but the gesture does nothing, so only the
             // Claim button ever dismisses.
-            Color.black.opacity(0.55)
+            Color.black.opacity(0.25)
+                .background(.ultraThinMaterial)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { }
@@ -39,7 +40,7 @@ struct SignupBonusModal: View {
                 }
             }
             .padding(Spacing.xl)
-            .background(Color.avoraSurface, in: RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+            .background(Color.avoraSurface, in: RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
             .padding(.horizontal, Spacing.xl)
 
             ConfettiView(trigger: confettiTrigger)
@@ -52,7 +53,7 @@ struct SignupBonusModal: View {
 #if DEBUG
 #Preview("Signup bonus modal") {
     ZStack {
-        LinearGradient.avoraBackgroundGradient.ignoresSafeArea()
+        Image("LoginBackground")
         SignupBonusModal(credits: 60) {}
     }
 }
