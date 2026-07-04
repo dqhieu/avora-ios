@@ -129,16 +129,22 @@ struct CreditTicketCard: View {
 
 #if DEBUG
 #Preview("Credit ticket cards") {
-    ScrollView {
+    let cols = [GridItem(.flexible(), spacing: Spacing.md),
+                GridItem(.flexible(), spacing: Spacing.md)]
+    return ScrollView {
         VStack(spacing: Spacing.md) {
             CreditTicketCard(pack: .init(credits: 6000, priceString: "$39.99",
                                          bonusPercent: 50, isFeatured: true), prominent: true) {}
-            CreditTicketCard(pack: .init(credits: 2500, priceString: "$19.99",
-                                         bonusPercent: 25, isFeatured: false), prominent: false) {}
-            CreditTicketCard(pack: .init(credits: 1000, priceString: "$9.99",
-                                         bonusPercent: 0, isFeatured: false), prominent: false) {}
-            CreditTicketCard(pack: .init(credits: 500, priceString: "kr 99,00",
-                                         bonusPercent: 0, isFeatured: false), prominent: false) {}
+            LazyVGrid(columns: cols, spacing: Spacing.md) {
+                CreditTicketCard(pack: .init(credits: 2500, priceString: "$19.99",
+                                             bonusPercent: 25, isFeatured: false), prominent: false) {}
+                CreditTicketCard(pack: .init(credits: 1000, priceString: "$9.99",
+                                             bonusPercent: 0, isFeatured: false), prominent: false) {}
+                CreditTicketCard(pack: .init(credits: 4000, priceString: "$29.99",
+                                             bonusPercent: 33, isFeatured: false), prominent: false) {}
+                CreditTicketCard(pack: .init(credits: 500, priceString: "kr 99,00",
+                                             bonusPercent: 0, isFeatured: false), prominent: false) {}
+            }
         }
         .padding(Spacing.lg)
     }
