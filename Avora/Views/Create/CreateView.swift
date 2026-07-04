@@ -63,15 +63,19 @@ struct CreateView: View {
     // into a horizontal strip. Each card reflects its own generation state via `slotCard`.
     @ViewBuilder private var photoArea: some View {
         if sourceImages.isEmpty {
-            ZStack {
-                if let effectivePlaceholder {
-                    RemoteImage(path: effectivePlaceholder.path, source: effectivePlaceholder.source, contentMode: .fit)
-                } else {
-                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                        .fill(Color.avoraSurface)
+            PhotosPicker(selection: $pickerItems, maxSelectionCount: 4, matching: .images) {
+                ZStack {
+                    if let effectivePlaceholder {
+                        RemoteImage(path: effectivePlaceholder.path, source: effectivePlaceholder.source, contentMode: .fit)
+                    } else {
+                        RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                            .fill(Color.avoraSurface)
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .buttonStyle(.plain)
+            .disabled(isWorking)
         } else if sourceImages.count == 1 {
             slotCard(0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
