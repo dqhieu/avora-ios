@@ -43,12 +43,16 @@ Deno.serve(async (req) => {
     const productId: string | undefined = ev.product_id;
     let credits: number | null = null;
     if (productId) {
-      const { data: pack } = await db
+      const { data: pack, error: lookupErr } = await db
         .from("credit_packs")
         .select("credits")
         .eq("product_id", productId)
         .eq("active", true)
         .maybeSingle();
+      // A real lookup failure must not silently under-grant: fail so RevenueCat
+      // retries (the transaction isn't recorded until apply_purchase runs). An
+      // unknown product returns data:null/error:null and still falls back to config.
+      if (lookupErr) return json({ error: "pack_lookup_failed" }, 500);
       credits = pack?.credits ?? null;
     }
 
