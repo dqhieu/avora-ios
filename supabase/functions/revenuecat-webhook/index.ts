@@ -37,11 +37,27 @@ Deno.serve(async (req) => {
     return json({ ok: true });
 
   } else if (type === "NON_RENEWING_PURCHASE") {
+    // Look up how many credits this product grants. Server is the source of
+    // truth; the client never tells us the amount. Unknown product → null,
+    // and apply_purchase falls back to config extra_pack.
+    const productId: string | undefined = ev.product_id;
+    let credits: number | null = null;
+    if (productId) {
+      const { data: pack } = await db
+        .from("credit_packs")
+        .select("credits")
+        .eq("product_id", productId)
+        .eq("active", true)
+        .maybeSingle();
+      credits = pack?.credits ?? null;
+    }
+
     const { data: result, error: rpcErr } = await db.rpc("apply_purchase", {
       p_tx:          txId,
       p_uid:         uid,
       p_kind:        "extra_pack",
       p_period_end:  null,
+      p_credits:     credits,
     });
     if (rpcErr) return json({ error: "purchase_failed" }, 500);
     if (result === "deduped") return json({ ok: true, deduped: true });
