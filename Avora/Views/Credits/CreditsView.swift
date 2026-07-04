@@ -62,7 +62,7 @@ struct CreditsView: View {
             Image(systemName: "centsign")
             Text(app.profile?.totalCredits ?? 0, format: .number)
         }
-        .font(.avoraLargeTitleSans)
+        .font(.avoraHeroSans)
         .foregroundStyle(Color.avoraTextPrimary)
         .padding(.top, Spacing.sm)
     }

@@ -10,7 +10,7 @@ extension Font {
     static let avoraSerifAccent = Font.custom("CormorantGaramond-MediumItalic", size: 20, relativeTo: .title3)
 
     // UI / body tier — Bricolage Grotesque
-    static let avoraLargeTitleSans = Font.custom("BricolageGrotesque-SemiBold", size: 34, relativeTo: .largeTitle)
+    static let avoraHeroSans = Font.custom("BricolageGrotesque-Regular", size: 48, relativeTo: .largeTitle)
     static let avoraHeadline    = Font.custom("BricolageGrotesque-SemiBold", size: 17, relativeTo: .headline)
     static let avoraBody        = Font.custom("BricolageGrotesque-Regular",  size: 17, relativeTo: .body)
     static let avoraCallout     = Font.custom("BricolageGrotesque-Regular",  size: 16, relativeTo: .callout)
