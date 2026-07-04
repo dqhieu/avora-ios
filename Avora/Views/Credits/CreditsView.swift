@@ -29,6 +29,7 @@ struct CreditsView: View {
                     balanceHeader
 
                     WeeklyPlanCard(
+                        weeklyCredits: app.config.weeklyAmount,
                         priceString: weeklyPackage?.storeProduct.localizedPriceString,
                         isActive: app.profile?.subscriptionActive ?? false,
                         renewsOn: app.profile?.subscriptionPeriodEnd,
@@ -95,7 +96,7 @@ struct CreditsView: View {
                 .font(.avoraHeroSans)
         }
         .foregroundStyle(Color.avoraTextPrimary)
-        .padding(.top, Spacing.sm)
+        .padding(.vertical, Spacing.lg)
     }
 
     private var sectionLabel: some View {

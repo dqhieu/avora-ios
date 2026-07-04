@@ -3,6 +3,7 @@ import SwiftUI
 /// Primary weekly-subscription card. State-aware: subscribe CTA when inactive,
 /// active status (no manage link) when the user already subscribes.
 struct WeeklyPlanCard: View {
+    let weeklyCredits: Int
     let priceString: String?
     let isActive: Bool
     let renewsOn: Date?
@@ -51,7 +52,7 @@ struct WeeklyPlanCard: View {
 
     /// "1,200 credits / week · $4.99" — price folded in when available.
     private var creditsAndPrice: Text {
-        var text = Text("1,200 credits").font(.avoraTitle2)
+        var text = Text("\(weeklyCredits.formatted()) credits").font(.avoraSubheadline)
             + Text(" / week").font(.avoraSubheadline).foregroundColor(.avoraTextSecondary)
         if let priceString {
             text = text
@@ -76,8 +77,8 @@ struct WeeklyPlanCard: View {
 #if DEBUG
 #Preview("Weekly plan — states") {
     VStack(spacing: Spacing.lg) {
-        WeeklyPlanCard(priceString: "$4.99", isActive: false, renewsOn: nil) {}
-        WeeklyPlanCard(priceString: "$4.99", isActive: true,
+        WeeklyPlanCard(weeklyCredits: 1200, priceString: "$4.99", isActive: false, renewsOn: nil) {}
+        WeeklyPlanCard(weeklyCredits: 1200, priceString: "$4.99", isActive: true,
                        renewsOn: .now.addingTimeInterval(7 * 86_400)) {}
     }
     .padding(Spacing.xl)
