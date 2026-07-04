@@ -8,91 +8,137 @@ struct CreditPackDisplay {
     let isFeatured: Bool
 }
 
-/// Small green "+N%" badge (hidden when bonus is 0).
-private struct BonusBadge: View {
-    let percent: Int
-    let prominent: Bool
-    var body: some View {
-        Text(prominent ? "Best value · +\(percent)%" : "+\(percent)%")
-            .font(.avoraCaption2)
-            .foregroundStyle(Color.avoraOnAccent)
-            .padding(.horizontal, Spacing.sm)
-            .padding(.vertical, 3)
-            .background(Color.avoraSuccess, in: Capsule())
+/// A thin straight line (horizontal or vertical) for dashed ticket rules/separators.
+private struct TicketRule: Shape {
+    var horizontal: Bool
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        if horizontal {
+            p.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        } else {
+            p.move(to: CGPoint(x: rect.midX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        }
+        return p
     }
 }
 
-/// Featured hero pack: badge + large credit amount + primary buy button.
-struct FeaturedPackCard: View {
+/// Admission-ticket card for a consumable credit pack. The whole card is a buy button.
+struct CreditTicketCard: View {
     let pack: CreditPackDisplay
+    var prominent: Bool
     let onBuy: () -> Void
 
+    private let notch: CGFloat = 14
+    private var height: CGFloat { prominent ? 168 : 128 }
+
     var body: some View {
-        VStack(spacing: Spacing.sm) {
-            if pack.bonusPercent > 0 {
-                BonusBadge(percent: pack.bonusPercent, prominent: true)
-            }
-            Text(pack.credits, format: .number)
-                .font(.avoraLargeTitle.monospacedDigit())
-                .foregroundStyle(Color.avoraTextPrimary)
-            Text("credits")
-                .font(.avoraFootnote)
-                .foregroundStyle(Color.avoraTextSecondary)
-            AvoraPrimaryButton(action: onBuy) {
-                Text("Buy · \(pack.priceString)")
-            }
-            .padding(.top, Spacing.xs)
+        Button(action: onBuy) { ticket }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityText)
+            .accessibilityAddTraits(.isButton)
+    }
+
+    private var ticket: some View {
+        HStack(spacing: 0) {
+            verticalText("CREDIT PACK", bold: false)
+                .frame(width: 34)
+            separator
+            centerContent
+                .frame(maxWidth: .infinity)
+            separator
+            verticalText(pack.priceString, bold: true)
+                .frame(width: 46)
         }
         .frame(maxWidth: .infinity)
-        .padding(Spacing.lg)
-        .avoraElevatedSurface(cornerRadius: Radius.lg)
+        .frame(height: height)
+        .foregroundStyle(Color.avoraTicketInk)
+        .background(Color.avoraTicketYellow, in: NotchedRectangle(notchRadius: notch))
+        .overlay(NotchedRectangle(notchRadius: notch).strokeBorder(Color.avoraTicketInk, lineWidth: 2))
+        .overlay(
+            NotchedRectangle(notchRadius: notch - 2)
+                .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [1, 3]))
+                .foregroundStyle(Color.avoraTicketInk.opacity(0.55))
+                .padding(6)
+        )
     }
-}
 
-/// Compact grid cell for a non-featured pack.
-struct PackGridCell: View {
-    let pack: CreditPackDisplay
-    let onBuy: () -> Void
-
-    var body: some View {
-        Button(action: onBuy) {
+    @ViewBuilder private var centerContent: some View {
+        if prominent {
             VStack(spacing: Spacing.xs) {
-                Text(pack.credits, format: .number)
-                    .font(.avoraTitle3.monospacedDigit())
-                    .foregroundStyle(Color.avoraTextPrimary)
-                Text(pack.priceString)
-                    .font(.avoraFootnote)
-                    .foregroundStyle(Color.avoraTextSecondary)
+                Text("✦  BEST VALUE  ✦").font(.avoraCaption2).tracking(3)
+                rule
+                Text(pack.credits, format: .number).font(.avoraLargeTitle.monospacedDigit())
+                rule
+                Text(footerText).font(.avoraCaption2).tracking(1)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.md)
-            .avoraElevatedSurface(cornerRadius: Radius.md)
-            .overlay(alignment: .topTrailing) {
+            .padding(.horizontal, Spacing.sm)
+        } else {
+            VStack(spacing: Spacing.xs) {
                 if pack.bonusPercent > 0 {
-                    BonusBadge(percent: pack.bonusPercent, prominent: false)
-                        .padding(Spacing.sm)
+                    Text("+\(pack.bonusPercent)% BONUS").font(.avoraCaption2).tracking(2)
                 }
+                Text(pack.credits, format: .number).font(.avoraTitle.monospacedDigit())
+                Text("CREDITS").font(.avoraCaption2).tracking(2)
             }
         }
-        .buttonStyle(.plain)
+    }
+
+    private var rule: some View {
+        TicketRule(horizontal: true)
+            .stroke(style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+            .foregroundStyle(Color.avoraTicketInk.opacity(0.35))
+            .frame(width: 160, height: 1)
+    }
+
+    private var separator: some View {
+        TicketRule(horizontal: false)
+            .stroke(style: StrokeStyle(lineWidth: 1.4, dash: [4, 5]))
+            .foregroundStyle(Color.avoraTicketInk.opacity(0.45))
+            .frame(width: 1)
+            .padding(.vertical, Spacing.lg)
+    }
+
+    private func verticalText(_ text: String, bold: Bool) -> some View {
+        Text(text)
+            .font(bold ? .avoraSubheadline.monospacedDigit() : .avoraCaption2)
+            .tracking(bold ? 0 : 2)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .fixedSize()
+            .rotationEffect(.degrees(-90))
+            .frame(maxHeight: .infinity)
+    }
+
+    private var footerText: String {
+        pack.bonusPercent > 0 ? "CREDITS · +\(pack.bonusPercent)% BONUS" : "CREDITS"
+    }
+
+    private var accessibilityText: String {
+        var parts = ["Credit pack", "\(pack.credits) credits"]
+        if pack.bonusPercent > 0 { parts.append("\(pack.bonusPercent) percent bonus") }
+        parts.append(pack.priceString)
+        return parts.joined(separator: ", ")
     }
 }
 
 #if DEBUG
-#Preview("Pack cards") {
-    let cols = [GridItem(.flexible(), spacing: Spacing.sm),
-                GridItem(.flexible(), spacing: Spacing.sm)]
-    return VStack(spacing: Spacing.sm) {
-        FeaturedPackCard(pack: .init(credits: 6000, priceString: "$39.99",
-                                     bonusPercent: 50, isFeatured: true)) {}
-        LazyVGrid(columns: cols, spacing: Spacing.sm) {
-            PackGridCell(pack: .init(credits: 500, priceString: "$4.99", bonusPercent: 0, isFeatured: false)) {}
-            PackGridCell(pack: .init(credits: 1000, priceString: "$9.99", bonusPercent: 0, isFeatured: false)) {}
-            PackGridCell(pack: .init(credits: 2500, priceString: "$19.99", bonusPercent: 25, isFeatured: false)) {}
-            PackGridCell(pack: .init(credits: 4000, priceString: "$29.99", bonusPercent: 33, isFeatured: false)) {}
+#Preview("Credit ticket cards") {
+    ScrollView {
+        VStack(spacing: Spacing.md) {
+            CreditTicketCard(pack: .init(credits: 6000, priceString: "$39.99",
+                                         bonusPercent: 50, isFeatured: true), prominent: true) {}
+            CreditTicketCard(pack: .init(credits: 2500, priceString: "$19.99",
+                                         bonusPercent: 25, isFeatured: false), prominent: false) {}
+            CreditTicketCard(pack: .init(credits: 1000, priceString: "$9.99",
+                                         bonusPercent: 0, isFeatured: false), prominent: false) {}
+            CreditTicketCard(pack: .init(credits: 500, priceString: "kr 99,00",
+                                         bonusPercent: 0, isFeatured: false), prominent: false) {}
         }
+        .padding(Spacing.lg)
     }
-    .padding(Spacing.xl)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(LinearGradient.avoraBackgroundGradient)
 }
