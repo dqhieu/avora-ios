@@ -140,6 +140,7 @@ struct LoginView: View {
     private func completeSignIn() async {
         await app.configureRevenueCat()
         await app.refreshProfile()
+        await app.loadConfig()
         app.isAuthenticated = true
     }
 
