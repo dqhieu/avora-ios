@@ -60,10 +60,9 @@ struct CreditsView: View {
     private var balanceHeader: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: "centsign")
-                .font(.avoraTitle2)
             Text(app.profile?.totalCredits ?? 0, format: .number)
-                .font(.avoraLargeTitle.monospacedDigit())
         }
+        .font(.avoraLargeTitleSans)
         .foregroundStyle(Color.avoraTextPrimary)
         .padding(.top, Spacing.sm)
     }
