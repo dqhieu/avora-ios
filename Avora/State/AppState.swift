@@ -39,6 +39,14 @@ final class AppState {
         profile = try? await AvoraAPI.shared.fetchProfile()
     }
 
+    /// Marks the signup bonus seen and optimistically clears the flag locally so
+    /// the modal dismisses immediately. If the RPC failed, the next profile fetch
+    /// re-shows the modal (at-least-once display) rather than losing it silently.
+    func markSignupBonusSeen() async {
+        try? await AvoraAPI.shared.markSignupBonusSeen()
+        profile?.signupBonusSeen = true
+    }
+
     func loadConfig() async {
         if let fetched = try? await AvoraAPI.shared.fetchCreditConfig() {
             config = fetched

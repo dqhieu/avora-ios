@@ -33,6 +33,10 @@ struct AvoraAPI {
             .value
     }
 
+    func markSignupBonusSeen() async throws {
+        try await db.rpc("mark_signup_bonus_seen").execute()
+    }
+
     func fetchCreditPacks() async throws -> [CreditPack] {
         try await db.from("credit_packs")
             .select("product_id,credits,sort_order")
