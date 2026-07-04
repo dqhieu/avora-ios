@@ -163,10 +163,13 @@ Flow:
   refetches profile (and config) on next launch → modal shows again. Correct.
 - **Config not yet loaded / misconfigured:** the `signupExtra > 0` guard means the
   modal never announces a 0-credit bonus. `AppState.config` is never nil (seeded
-  with `.fallback`, `signupExtra == 50`), and `loadConfig()` in `completeSignIn()`
-  / `bootstrap()` refreshes it to the live amount before the modal renders. If the
-  live config ever reports `signup_extra == 0`, the modal simply does not show and
-  the flag is not marked seen.
+  with `.fallback`), and `loadConfig()` in `completeSignIn()` / `bootstrap()`
+  refreshes it to the live amount before the modal renders. The `.fallback`
+  deliberately uses `signupExtra == 0` as a "not-yet-loaded" sentinel: if a fresh
+  login's `loadConfig()` fails (e.g. flaky network) the guard *defers* the modal
+  rather than showing the stale fallback amount and burning the one-time reveal —
+  it appears on a later launch once the real amount is fetched. (`signupExtra` has
+  no other reader in the app, so the 0 sentinel affects nothing else.)
 - **Ack API fails:** local dismissal still happens (optimistic), but the server
   flag stays `false`, so the modal re-shows on next launch — at-least-once
   display. Acceptable; no error UI needed.
@@ -182,7 +185,8 @@ Flow:
 - Relaunch after claim → no modal.
 - Existing (backfilled) account → sees it exactly once, then never again.
 - Kill app before claiming → modal reappears on next launch.
-- Backdrop tap does not dismiss the modal.
+- Backdrop tap does not dismiss the modal, and does not pass through to the app
+  behind it (the backdrop absorbs taps; only "Claim" dismisses).
 - `signup_extra == 0` (or config not yet loaded) → modal does not show and the
   flag is not marked seen.
 
