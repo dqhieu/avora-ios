@@ -3,6 +3,7 @@ import SwiftUI
 struct LoginView: View {
     @Environment(AppState.self) private var app
     @State private var loadingProvider: LoadingProvider?
+    @State private var showAuthError = false
 
     private enum LoadingProvider { case apple, google }
 
@@ -23,6 +24,11 @@ struct LoginView: View {
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 28)
+        }
+        .alert("Couldn't sign in", isPresented: $showAuthError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Something went wrong. Please try again.")
         }
     }
 
@@ -62,7 +68,7 @@ struct LoginView: View {
                 Image("GoogleLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 16, height: 16)
                 Text("Continue with Google")
             }
         }
@@ -82,7 +88,8 @@ struct LoginView: View {
                 try await AuthService.signInWithApple(presentationAnchor: window)
                 await completeSignIn()
             } catch {
-                // User cancelled or auth failed — stay on login screen
+                // Stay silent when the user cancels; surface real failures.
+                if !AuthService.isCancellation(error) { showAuthError = true }
             }
         }
     }
@@ -96,7 +103,8 @@ struct LoginView: View {
                 try await AuthService.signInWithGoogle(presenting: root)
                 await completeSignIn()
             } catch {
-                // User cancelled or auth failed — stay on login screen
+                // Stay silent when the user cancels; surface real failures.
+                if !AuthService.isCancellation(error) { showAuthError = true }
             }
         }
     }

@@ -38,6 +38,14 @@ enum AuthService {
         )
     }
 
+    /// True when the error is the user dismissing the provider's sign-in sheet,
+    /// so the caller can stay silent instead of surfacing a failure.
+    static func isCancellation(_ error: Error) -> Bool {
+        if let error = error as? ASAuthorizationError, error.code == .canceled { return true }
+        if let error = error as? GIDSignInError, error.code == .canceled { return true }
+        return false
+    }
+
     private static func randomNonce(_ length: Int = 32) -> String {
         let chars = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
