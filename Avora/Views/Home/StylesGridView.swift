@@ -32,9 +32,7 @@ struct StylesGridView: View {
         .navigationTitle("Styles")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                if let credits = app.profile?.totalCredits {
-                    CreditsBalancePill(credits: credits) { showCredits = true }
-                }
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
         }

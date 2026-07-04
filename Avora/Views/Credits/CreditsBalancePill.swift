@@ -8,8 +8,12 @@ struct CreditsBalancePill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Spacing.xs) {
-                Image(systemName: "centsign.circle")
+                Image(systemName: "centsign")
+              if credits == -1 {
+                ProgressView()
+              } else {
                 Text(credits, format: .number).monospacedDigit()
+              }
             }
             .font(.avoraSubheadline)
             .foregroundStyle(Color.avoraTextPrimary)
