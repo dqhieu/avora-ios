@@ -1,4 +1,5 @@
 import SwiftUI
+import VariableBlur
 
 struct LoginView: View {
     @Environment(AppState.self) private var app
@@ -19,17 +20,40 @@ struct LoginView: View {
 
             VStack(spacing: 12) {
                 Spacer()
-                loginButton
-                googleButton
+                VStack(spacing: 12) {
+                    branding
+                    loginButton
+                    googleButton
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 56)
+                .padding(.bottom, 28)
+                .background(bottomBlur)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 28)
         }
         .alert("Couldn't sign in", isPresented: $showAuthError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Something went wrong. Please try again.")
         }
+    }
+
+    private var bottomBlur: some View {
+        VariableBlurView(maxBlurRadius: 4, direction: .blurredBottomClearTop)
+            .ignoresSafeArea(edges: .bottom)
+    }
+
+    private var branding: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Avora")
+                .font(.avoraHero)
+            Text("Your photos, reimagined.")
+                .font(.avoraCallout)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .foregroundStyle(.white)
+        .padding(.bottom, 20)
+        .padding(.top, 32)
     }
 
     private var loginButton: some View {
@@ -122,4 +146,30 @@ struct LoginView: View {
             .windows.first { $0.isKeyWindow }?
             .rootViewController
     }
+}
+
+private extension UIImage {
+    /// Vertical alpha gradient (clear at the top, opaque at the bottom) used as a
+    /// `VariableBlurView` mask. Blur is strongest at the bottom and fades out just
+    /// above the app name so the branding and buttons read cleanly with no hard edge.
+    static let avoraBottomBlurMask: UIImage = {
+        let size = CGSize(width: 1, height: 100)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [
+                    UIColor(white: 1, alpha: 0).cgColor,
+                    UIColor(white: 1, alpha: 1).cgColor
+                ] as CFArray,
+                locations: [0, 0.55]
+            )!
+            context.cgContext.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: 0, y: 0),
+                end: CGPoint(x: 0, y: size.height),
+                options: [.drawsAfterEndLocation]
+            )
+        }
+    }()
 }

@@ -16,6 +16,7 @@
 		47327BDD2FF20E2C0049310F /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDC2FF20E2C0049310F /* Storage */; };
 		47327BDF2FF20E2C0049310F /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDE2FF20E2C0049310F /* Supabase */; };
 		47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 47729D1E2FF8E40700CD85CA /* GoogleSignIn */; };
+		47729E612FF902C300CD85CA /* VariableBlur in Frameworks */ = {isa = PBXBuildFile; productRef = 47729E602FF902C300CD85CA /* VariableBlur */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +56,7 @@
 				47327BDF2FF20E2C0049310F /* Supabase in Frameworks */,
 				47327BDB2FF20E2C0049310F /* Realtime in Frameworks */,
 				47327BD52FF20E2C0049310F /* Auth in Frameworks */,
+				47729E612FF902C300CD85CA /* VariableBlur in Frameworks */,
 				47327BD92FF20E2C0049310F /* PostgREST in Frameworks */,
 				47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */,
 			);
@@ -108,6 +110,7 @@
 				47327BDC2FF20E2C0049310F /* Storage */,
 				47327BDE2FF20E2C0049310F /* Supabase */,
 				47729D1E2FF8E40700CD85CA /* GoogleSignIn */,
+				47729E602FF902C300CD85CA /* VariableBlur */,
 			);
 			productName = Avora;
 			productReference = 471C58E12FEEC9B60025C317 /* Avora.app */;
@@ -141,6 +144,7 @@
 				47327BCE2FF20DF00049310F /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				47729D1D2FF8E40700CD85CA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				47729E5F2FF902C300CD85CA /* XCRemoteSwiftPackageReference "VariableBlur" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 471C58E22FEEC9B60025C317 /* Products */;
@@ -424,6 +428,14 @@
 				minimumVersion = 9.2.0;
 			};
 		};
+		47729E5F2FF902C300CD85CA /* XCRemoteSwiftPackageReference "VariableBlur" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nikstar/VariableBlur";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -471,6 +483,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 47729D1D2FF8E40700CD85CA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		47729E602FF902C300CD85CA /* VariableBlur */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 47729E5F2FF902C300CD85CA /* XCRemoteSwiftPackageReference "VariableBlur" */;
+			productName = VariableBlur;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
