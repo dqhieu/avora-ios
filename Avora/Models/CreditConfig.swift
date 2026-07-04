@@ -29,10 +29,13 @@ struct CreditConfig: Codable {
     }
 
     /// Baked-in defaults so the app works offline and before the first fetch.
-    /// Must mirror the seed row in migrations 000020_credit_config.sql and
-    /// 000027_per_quality_cost.sql.
+    /// Economics values mirror the seed row in migrations 000020_credit_config.sql
+    /// and 000027_per_quality_cost.sql. `signupExtra` is intentionally `0` here as
+    /// a "not-yet-loaded" sentinel: the one-time signup-bonus modal only appears
+    /// once the real `signup_extra` has been fetched from config, so we never show
+    /// (and let the user burn) a stale fallback amount.
     static let fallback = CreditConfig(
-        weeklyAmount: 1000, signupExtra: 50, generationCost: 20, extraPack: 500,
+        weeklyAmount: 1000, signupExtra: 0, generationCost: 20, extraPack: 500,
         costLow: 20, costMedium: 30, costHigh: 100
     )
 }

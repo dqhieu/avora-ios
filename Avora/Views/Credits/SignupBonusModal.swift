@@ -12,10 +12,14 @@ struct SignupBonusModal: View {
 
     var body: some View {
         ZStack {
-            // Dimmed backdrop. contentShape + a no-op-free gesture is avoided on
-            // purpose: the backdrop swallows taps but never dismisses.
+            // Dimmed backdrop. contentShape + an empty tap gesture make it
+            // intentionally absorb taps, blocking interaction with the app
+            // behind the modal — but the gesture does nothing, so only the
+            // Claim button ever dismisses.
             Color.black.opacity(0.55)
                 .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { }
 
             VStack(spacing: Spacing.lg) {
                 VStack(spacing: Spacing.xs) {
