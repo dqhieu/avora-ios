@@ -116,35 +116,32 @@ private struct CreationDetailView: View {
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
+            Spacer(minLength: 4)
             if let path = generation.outputPath {
                 RemoteImage(path: path, contentMode: .fit)
             }
-            controls
+            Spacer(minLength: 4)
+            if let style {
+                NavigationLink(value: CreateRoute(style: style, placeholder: placeholder)) {
+                    Label("Create with this style", systemImage: "wand.and.stars")
+                }
+                .buttonStyle(AvoraPrimaryButtonStyle())
+                .padding(.horizontal, Spacing.lg)
+            }
         }
-        .padding(Spacing.lg)
+        .padding(.vertical, Spacing.lg)
         .frame(maxHeight: .infinity)
         .navigationTitle(style?.name ?? "Creation")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await resolveStyle() }
-    }
-
-    @ViewBuilder private var controls: some View {
-        if let style {
-            NavigationLink(value: CreateRoute(style: style, placeholder: placeholder)) {
-                Label("Create with this style", systemImage: "wand.and.stars")
-                    .frame(maxWidth: .infinity)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { Task { await save() } } label: {
+                    Image(systemName: saved ? "checkmark" : "square.and.arrow.down")
+                }
+                .disabled(saved)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.avoraAccent)
         }
-        Button { Task { await save() } } label: {
-            Label(saved ? "Saved to Photos" : "Save to Photos",
-                  systemImage: saved ? "checkmark" : "square.and.arrow.down")
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-        .tint(Color.avoraAccent)
-        .disabled(saved)
+        .task { await resolveStyle() }
     }
 
     private func resolveStyle() async {
