@@ -23,9 +23,22 @@
 		471C58E12FEEC9B60025C317 /* Avora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Avora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		471C58E42FEEC9B60025C317 /* Exceptions for "Avora" folder in "Avora" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 471C58E02FEEC9B60025C317 /* Avora */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		471C58E32FEEC9B60025C317 /* Avora */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				471C58E42FEEC9B60025C317 /* Exceptions for "Avora" folder in "Avora" target */,
+			);
 			path = Avora;
 			sourceTree = "<group>";
 		};
@@ -295,6 +308,7 @@
 				DEVELOPMENT_TEAM = BH46VD9229;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avora/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Avora saves your generated images to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Avora needs access to your photos to generate restyled images.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -335,6 +349,7 @@
 				DEVELOPMENT_TEAM = BH46VD9229;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avora/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Avora saves your generated images to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Avora needs access to your photos to generate restyled images.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
