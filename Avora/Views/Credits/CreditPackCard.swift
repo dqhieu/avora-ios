@@ -70,7 +70,7 @@ struct CreditTicketCard: View {
             VStack(spacing: Spacing.xs) {
                 Text("✦  BEST VALUE  ✦").font(.avoraCaption2).tracking(3)
                 rule
-                Text(pack.credits, format: .number).font(.avoraLargeTitle.monospacedDigit())
+                Text(pack.credits, format: .number).font(.avoraNumberLarge.monospacedDigit())
                 rule
                 Text(footerText).font(.avoraCaption2).tracking(1)
             }
@@ -81,7 +81,7 @@ struct CreditTicketCard: View {
                     Text("+\(pack.bonusPercent)% BONUS").font(.avoraCaption2).tracking(2)
                 }
                 Text(pack.credits, format: .number)
-                    .font(.avoraTitle.monospacedDigit())
+                    .font(.avoraNumber.monospacedDigit())
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text("CREDITS").font(.avoraCaption2).tracking(2)

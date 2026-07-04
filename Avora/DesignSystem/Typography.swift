@@ -19,6 +19,10 @@ extension Font {
     static let avoraFootnote    = Font.custom("BricolageGrotesque-Regular",  size: 13, relativeTo: .footnote)
     static let avoraCaption     = Font.custom("BricolageGrotesque-Medium",   size: 12, relativeTo: .caption)
     static let avoraCaption2    = Font.custom("BricolageGrotesque-Regular",  size: 11, relativeTo: .caption2)
+
+    // Numeric display — Bricolage Grotesque (credit values, counts)
+    static let avoraNumberLarge = Font.custom("BricolageGrotesque-SemiBold", size: 44, relativeTo: .largeTitle)
+    static let avoraNumber      = Font.custom("BricolageGrotesque-SemiBold", size: 30, relativeTo: .title)
 }
 
 #if DEBUG
