@@ -43,16 +43,17 @@ reflects the new subscription/credits).
 
 ## Packs
 
-One-time consumable top-ups. Fixed pricing and grants (product IDs to be
-confirmed against RevenueCat):
+One-time consumable top-ups. Fixed pricing and grants:
 
-| Price (USD) | Credits | Bonus vs base | Badge |
-|-------------|---------|---------------|-------|
-| $4.99  | 500   | base         | none              |
-| $9.99  | 1,000 | ~0%          | none (intentional anchor) |
-| $19.99 | 2,500 | +25%         | `+25%`            |
-| $29.99 | 4,000 | +33%         | `+33%`            |
-| $39.99 | 6,000 | +50%         | `Best value · +50%` (featured) |
+| Product ID | Price (USD) | Credits | Bonus vs base | Badge |
+|------------|-------------|---------|---------------|-------|
+| `com.hieudinh.Avora.credits500`  | $4.99  | 500   | base | none |
+| `com.hieudinh.Avora.credits1000` | $9.99  | 1,000 | ~0%  | none (intentional anchor) |
+| `com.hieudinh.Avora.credits2500` | $19.99 | 2,500 | +25% | `+25%` |
+| `com.hieudinh.Avora.credits4000` | $29.99 | 4,000 | +33% | `+33%` |
+| `com.hieudinh.Avora.credits6000` | $39.99 | 6,000 | +50% | `Best value · +50%` (featured) |
+
+The weekly subscription product is `com.hieudinh.Avora.weekly`.
 
 Bonus is computed client-side from the cheapest pack's credits-per-dollar
 (`500 / 4.99 ≈ 100.2`). A pack whose bonus rounds to ≤ ~1% shows no badge, so the
@@ -132,7 +133,16 @@ create table public.credit_packs (
 -- RLS: read-only for authenticated/anon, mirroring credit_config.
 ```
 
-Seeded with the 5 packs above (product IDs confirmed against RevenueCat).
+Seeded with the 5 packs above:
+
+```sql
+insert into public.credit_packs (product_id, credits, sort_order) values
+  ('com.hieudinh.Avora.credits500',  500,  0),
+  ('com.hieudinh.Avora.credits1000', 1000, 1),
+  ('com.hieudinh.Avora.credits2500', 2500, 2),
+  ('com.hieudinh.Avora.credits4000', 4000, 3),
+  ('com.hieudinh.Avora.credits6000', 6000, 4);
+```
 
 **`apply_purchase`** gains a credits argument for the extra-pack branch:
 
@@ -198,9 +208,8 @@ retroactively topped up.
 
 ## Open items
 
-- Confirm the exact RevenueCat **product identifiers** and prices for the 5
-  consumable packs **and the weekly subscription** (the connected MCP key points
-  at a different project, so they must be read from the Avora RevenueCat
-  dashboard or the app's live offering).
+- Product identifiers confirmed (see tables above). Prices are read live from
+  RevenueCat at runtime, so they are not hardcoded.
 - Confirm the profile exposes `subscription_active` / `subscription_period_end`
-  to the client (columns exist server-side; verify they're selectable under RLS).
+  to the client (columns exist server-side; verify they're selectable under RLS)
+  — to be resolved during implementation.
