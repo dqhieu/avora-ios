@@ -26,7 +26,7 @@ struct AvoraAPI {
     func fetchProfile() async throws -> Profile {
         let uid = try await currentUserId()
         return try await db.from("profiles")
-            .select("weekly_credits,extra_credits,subscription_active,subscription_period_end")
+            .select("weekly_credits,extra_credits,subscription_active,subscription_period_end,signup_bonus_seen")
             .eq("id", value: uid.uuidString)
             .single()
             .execute()
