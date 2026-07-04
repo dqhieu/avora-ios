@@ -26,9 +26,18 @@ struct AvoraAPI {
     func fetchProfile() async throws -> Profile {
         let uid = try await currentUserId()
         return try await db.from("profiles")
-            .select("weekly_credits,extra_credits")
+            .select("weekly_credits,extra_credits,subscription_active,subscription_period_end")
             .eq("id", value: uid.uuidString)
             .single()
+            .execute()
+            .value
+    }
+
+    func fetchCreditPacks() async throws -> [CreditPack] {
+        try await db.from("credit_packs")
+            .select("product_id,credits,sort_order")
+            .eq("active", value: true)
+            .order("sort_order")
             .execute()
             .value
     }

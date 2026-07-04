@@ -4,11 +4,11 @@ select plan(6);
 insert into auth.users (id, email) values ('66666666-6666-6666-6666-666666666666','f@test.dev');
 -- profile auto-created: extra=50 (config signup_extra), weekly=0
 
--- initial purchase sets weekly to config weekly_amount (1000) and activates
+-- initial purchase sets weekly to config weekly_amount (1200) and activates
 select is(apply_purchase('tx1','66666666-6666-6666-6666-666666666666','initial', now() + interval '7 days'),
           'applied', 'initial purchase applied');
 select is((select weekly_credits from public.profiles where id='66666666-6666-6666-6666-666666666666'),
-          1000, 'weekly set to config weekly_amount (1000)');
+          1200, 'weekly set to config weekly_amount (1200)');
 select is((select subscription_active from public.profiles where id='66666666-6666-6666-6666-666666666666'),
           true, 'subscription activated');
 

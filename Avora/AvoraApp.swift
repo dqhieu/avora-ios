@@ -1,11 +1,13 @@
 import SwiftUI
 import GoogleSignIn
+import RevenueCat
 
 @main
 struct AvoraApp: App {
     @State private var app: AppState
 
     init() {
+        Purchases.configure(withAPIKey: "appl_ntflcZHcYyfOpVEQVePRhQzBXQC")
         FontRegistrar.registerBundledFonts()
         AppearanceConfigurator.configureNavigationBar()
         #if DEBUG

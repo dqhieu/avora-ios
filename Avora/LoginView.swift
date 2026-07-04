@@ -13,10 +13,7 @@ struct LoginView: View {
             Color.black
                 .ignoresSafeArea()
 
-            Image("LoginBackground")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+            InfiniteMosaicBackground()
 
             VStack(spacing: 12) {
                 Spacer()
