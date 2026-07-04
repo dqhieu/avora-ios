@@ -80,7 +80,10 @@ struct CreditTicketCard: View {
                 if pack.bonusPercent > 0 {
                     Text("+\(pack.bonusPercent)% BONUS").font(.avoraCaption2).tracking(2)
                 }
-                Text(pack.credits, format: .number).font(.avoraTitle.monospacedDigit())
+                Text(pack.credits, format: .number)
+                    .font(.avoraTitle.monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 Text("CREDITS").font(.avoraCaption2).tracking(2)
             }
         }

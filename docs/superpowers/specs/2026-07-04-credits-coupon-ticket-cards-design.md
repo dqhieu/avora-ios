@@ -9,7 +9,7 @@ Status: Approved, ready for implementation planning
 Restyle the one-time credit packs in `CreditsView` as **admission-ticket / passport-stamp cards** — a
 notched-corner rectangle with a solid yellow fill, black ink, double border, and vertical stub text.
 Each ticket is tap-to-buy. This replaces the current `FeaturedPackCard` (hero) + `PackGridCell` (grid)
-pair with a single ticket view arranged in a vertical list.
+pair with a single ticket view: the featured pack full-width on top, standard packs in a 2-column grid below.
 
 Scope is limited to the one-time packs. The balance header, `WeeklyPlanCard`, "One-time packs" section
 label, and load/retry states are unchanged.
@@ -89,12 +89,10 @@ Structure:
 
 ### `CreditsView` changes
 `Avora/Views/Credits/CreditsView.swift`:
-- Remove `cols`, the `LazyVGrid`, and the `gridPacks` computed property.
-- Replace the featured + grid block with a `VStack(spacing:)` list:
-  - Featured pack first as `CreditTicketCard(pack:prominent: true, onBuy:)`.
-  - Remaining packs as `CreditTicketCard(pack:prominent: false, onBuy:)`, in the catalog's existing
-    credits-ascending order. (Ordering of the remainder is low-stakes and easily flipped.)
-- Keep `featured` computed property (or equivalent) to pull the prominent pack to the top.
+- Featured pack renders full-width and prominent as `CreditTicketCard(pack:prominent: true, onBuy:)` at the top.
+- Standard packs render below in the 2-column `LazyVGrid` (`cols`), each a non-prominent
+  `CreditTicketCard(pack:prominent: false, onBuy:)`, in the catalog's existing credits-ascending order.
+- Keep `featuredPack` / `standardPacks` computed properties to split the two groups.
 - `sectionLabel`, `balanceHeader`, `WeeklyPlanCard`, `retry`, `load()`, and `buy(_:)` unchanged.
 
 ### Color tokens

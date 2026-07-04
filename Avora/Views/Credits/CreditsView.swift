@@ -11,9 +11,11 @@ struct CreditsView: View {
     @State private var busy = false
     @State private var loadFailed = false
 
-    private var orderedPacks: [CreditPackOption] {
-        packOptions.filter { $0.display.isFeatured } + packOptions.filter { !$0.display.isFeatured }
-    }
+    private let cols = [GridItem(.flexible(), spacing: Spacing.md),
+                        GridItem(.flexible(), spacing: Spacing.md)]
+
+    private var featuredPack: CreditPackOption? { packOptions.first { $0.display.isFeatured } }
+    private var standardPacks: [CreditPackOption] { packOptions.filter { !$0.display.isFeatured } }
 
     var body: some View {
         NavigationStack {
@@ -31,10 +33,16 @@ struct CreditsView: View {
                     if !packOptions.isEmpty {
                         sectionLabel
                         VStack(spacing: Spacing.md) {
-                            ForEach(orderedPacks) { opt in
-                                CreditTicketCard(pack: opt.display,
-                                                 prominent: opt.display.isFeatured) {
-                                    Task { await buy(opt.package) }
+                            if let featuredPack {
+                                CreditTicketCard(pack: featuredPack.display, prominent: true) {
+                                    Task { await buy(featuredPack.package) }
+                                }
+                            }
+                            LazyVGrid(columns: cols, spacing: Spacing.md) {
+                                ForEach(standardPacks) { opt in
+                                    CreditTicketCard(pack: opt.display, prominent: false) {
+                                        Task { await buy(opt.package) }
+                                    }
                                 }
                             }
                         }
