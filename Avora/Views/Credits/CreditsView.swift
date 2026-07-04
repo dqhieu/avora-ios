@@ -88,11 +88,12 @@ struct CreditsView: View {
     }
 
     private var balanceHeader: some View {
-        HStack(spacing: Spacing.sm) {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
             Image(systemName: "centsign")
+                .font(.largeTitle)
             Text(app.profile?.totalCredits ?? 0, format: .number)
+                .font(.avoraHeroSans)
         }
-        .font(.avoraHeroSans)
         .foregroundStyle(Color.avoraTextPrimary)
         .padding(.top, Spacing.sm)
     }
@@ -100,7 +101,7 @@ struct CreditsView: View {
     private var sectionLabel: some View {
         Text("One-time packs")
             .font(.avoraCaption)
-            .foregroundStyle(Color.avoraTextTertiary)
+            .foregroundStyle(Color.avoraTextSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 

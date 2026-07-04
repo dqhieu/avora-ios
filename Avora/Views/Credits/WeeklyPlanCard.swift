@@ -12,42 +12,64 @@ struct WeeklyPlanCard: View {
         .dateTime.month(.abbreviated).day()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            if isActive {
-                Label("Weekly plan · Active", systemImage: "checkmark.seal.fill")
-                    .font(.avoraCaption)
-                    .foregroundStyle(Color.avoraSuccess)
-            } else {
-                Text("Weekly plan")
-                    .font(.avoraCaption)
-                    .foregroundStyle(Color.avoraTextSecondary)
-            }
+        HStack(alignment: .center, spacing: Spacing.md) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                if isActive {
+                    Label("Weekly plan · Active", systemImage: "checkmark.seal.fill")
+                        .font(.avoraCaption)
+                        .foregroundStyle(Color.avoraSuccess)
+                } else {
+                    Text("Weekly plan")
+                        .font(.avoraCaption)
+                        .foregroundStyle(Color.avoraTextSecondary)
+                }
 
-            (Text("1,200 credits").font(.avoraTitle2)
-             + Text(" / week").font(.avoraSubheadline).foregroundColor(.avoraTextSecondary))
-                .foregroundStyle(Color.avoraTextPrimary)
+                creditsAndPrice
+                    .foregroundStyle(Color.avoraTextPrimary)
 
-            if isActive {
-                if let renewsOn {
-                    Text("Renews \(renewsOn.formatted(Self.renews))")
+                if isActive {
+                    if let renewsOn {
+                        Text("Renews \(renewsOn.formatted(Self.renews))")
+                            .font(.avoraFootnote)
+                            .foregroundStyle(Color.avoraTextSecondary)
+                    }
+                } else {
+                    Text("Auto-renews · cancel anytime")
                         .font(.avoraFootnote)
                         .foregroundStyle(Color.avoraTextSecondary)
                 }
-            } else {
-                Text("Auto-renews · cancel anytime")
-                    .font(.avoraFootnote)
-                    .foregroundStyle(Color.avoraTextSecondary)
-                if let priceString {
-                    AvoraPrimaryButton(action: onSubscribe) {
-                        Text("Subscribe · \(priceString)/week")
-                    }
-                    .padding(.top, Spacing.xs)
-                }
+            }
+
+            Spacer(minLength: Spacing.sm)
+
+            if !isActive, priceString != nil {
+                subscribeButton
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.lg)
-        .avoraElevatedSurface(cornerRadius: Radius.lg)
+    }
+
+    /// "1,200 credits / week · $4.99" — price folded in when available.
+    private var creditsAndPrice: Text {
+        var text = Text("1,200 credits").font(.avoraTitle2)
+            + Text(" / week").font(.avoraSubheadline).foregroundColor(.avoraTextSecondary)
+        if let priceString {
+            text = text
+                + Text(" · \(priceString)").font(.avoraSubheadline).foregroundColor(.avoraTextSecondary)
+        }
+        return text
+    }
+
+    private var subscribeButton: some View {
+        Button(action: onSubscribe) {
+            Text("Subscribe")
+                .font(.avoraButton)
+                .foregroundStyle(Color.avoraOnAccent)
+                .padding(.horizontal, Spacing.lg)
+                .frame(minHeight: 44)
+                .avoraGlass(in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
