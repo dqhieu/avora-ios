@@ -2,13 +2,18 @@ import Foundation
 import RevenueCat
 
 enum AvoraPurchases {
-    static func configure(appUserID: String) {
-        Purchases.logLevel = .warn
-        Purchases.configure(
-            with: Configuration.Builder(withAPIKey: AvoraConfig.revenueCatAPIKey)
-                .with(appUserID: appUserID)
-                .build()
-        )
+    /// Identify the RevenueCat user as the signed-in Supabase user. The SDK is
+    /// configured once (anonymously) at launch in AvoraApp; this aliases that
+    /// anonymous id to the real user id, so purchases — and the webhook's
+    /// `app_user_id` — tie to the correct account.
+    static func logIn(appUserID: String) async {
+        _ = try? await Purchases.shared.logIn(appUserID)
+    }
+
+    /// Revert to a fresh anonymous id on sign-out, so the next account on this
+    /// device doesn't inherit the previous user's RevenueCat identity.
+    static func logOut() async {
+        _ = try? await Purchases.shared.logOut()
     }
 
     static func currentOffering() async throws -> Offering? {

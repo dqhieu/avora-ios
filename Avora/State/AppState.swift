@@ -61,12 +61,16 @@ final class AppState {
         styles.first { $0.id == id }
     }
 
+    // Logs the signed-in Supabase user into RevenueCat (the SDK is configured
+    // anonymously at launch). Called at bootstrap for an existing session and
+    // from the login flow after a fresh sign-in.
     func configureRevenueCat() async {
         guard let session = try? await SupabaseClientProvider.client.auth.session else { return }
-        AvoraPurchases.configure(appUserID: session.user.id.uuidString)
+        await AvoraPurchases.logIn(appUserID: session.user.id.uuidString)
     }
 
     func signOut() async {
+        await AvoraPurchases.logOut()
         try? await SupabaseClientProvider.client.auth.signOut()
         isAuthenticated = false
         profile = nil
