@@ -8,6 +8,7 @@ struct CreditsView: View {
     @State private var offering: Offering?
     @State private var packOptions: [CreditPackOption] = []
     @State private var weeklyPackage: Package?
+    @State private var weeklyBonusPercent = 0
     @State private var busy = false
     @State private var loadFailed = false
 
@@ -31,6 +32,7 @@ struct CreditsView: View {
 
                     WeeklyPlanCard(
                         weeklyCredits: app.config.weeklyAmount,
+                        bonusPercent: weeklyBonusPercent,
                         priceString: weeklyPackage?.storeProduct.localizedPriceString,
                         isActive: app.profile?.subscriptionActive ?? false,
                         renewsOn: app.profile?.subscriptionPeriodEnd,
@@ -143,6 +145,8 @@ struct CreditsView: View {
         guard let off else { loadFailed = true; return }
         offering = off
         weeklyPackage = CreditsCatalog.weeklyPackage(offering: off)
+        weeklyBonusPercent = CreditsCatalog.weeklyBonusPercent(
+            weeklyCredits: app.config.weeklyAmount, packs: packs, offering: off)
         packOptions = CreditsCatalog.packOptions(packs: packs, offering: off)
         if packOptions.isEmpty { loadFailed = true }
     }

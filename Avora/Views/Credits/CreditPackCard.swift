@@ -63,10 +63,12 @@ struct CreditTicketCard: View {
         if prominent {
             VStack(spacing: Spacing.xs) {
                 Text("✦  BEST VALUE  ✦").font(.avoraHeadline).tracking(3)
+                    .padding(.bottom, 8)
                 rule
                 Text(pack.credits, format: .number).font(.avoraNumberLarge.monospacedDigit())
                 rule
                 Text(footerText).font(.avoraSubheadline).tracking(1)
+                    .padding(.top, 8)
             }
             .padding(.horizontal, Spacing.sm)
         } else {

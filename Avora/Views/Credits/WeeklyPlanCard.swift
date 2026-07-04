@@ -4,6 +4,7 @@ import SwiftUI
 /// active status (no manage link) when the user already subscribes.
 struct WeeklyPlanCard: View {
     let weeklyCredits: Int
+    let bonusPercent: Int
     let priceString: String?
     let isActive: Bool
     let renewsOn: Date?
@@ -20,9 +21,12 @@ struct WeeklyPlanCard: View {
                         .font(.avoraCaption)
                         .foregroundStyle(Color.avoraSuccess)
                 } else {
-                    Text("Weekly plan")
-                        .font(.avoraCaption)
-                        .foregroundStyle(Color.avoraTextSecondary)
+                    HStack(spacing: Spacing.sm) {
+                        Text("Weekly plan")
+                            .font(.avoraCaption)
+                            .foregroundStyle(Color.avoraTextSecondary)
+                        if bonusPercent > 0 { bonusBadge }
+                    }
                 }
 
                 creditsAndPrice
@@ -61,6 +65,16 @@ struct WeeklyPlanCard: View {
         return text
     }
 
+    /// "20% more credits" — value nudge vs one-time packs (inactive state only).
+    private var bonusBadge: some View {
+        Text("\(bonusPercent)% more credits")
+            .font(.avoraCaption2)
+            .foregroundStyle(Color.avoraSuccess)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, 2)
+            .background(Color.avoraSuccess.opacity(0.15), in: Capsule())
+    }
+
     private var subscribeButton: some View {
         Button(action: onSubscribe) {
             Text("Subscribe")
@@ -77,9 +91,10 @@ struct WeeklyPlanCard: View {
 #if DEBUG
 #Preview("Weekly plan — states") {
     VStack(spacing: Spacing.lg) {
-        WeeklyPlanCard(weeklyCredits: 1200, priceString: "$4.99", isActive: false, renewsOn: nil) {}
-        WeeklyPlanCard(weeklyCredits: 1200, priceString: "$4.99", isActive: true,
-                       renewsOn: .now.addingTimeInterval(7 * 86_400)) {}
+        WeeklyPlanCard(weeklyCredits: 1200, bonusPercent: 20, priceString: "$9.99",
+                       isActive: false, renewsOn: nil) {}
+        WeeklyPlanCard(weeklyCredits: 1200, bonusPercent: 20, priceString: "$9.99",
+                       isActive: true, renewsOn: .now.addingTimeInterval(7 * 86_400)) {}
     }
     .padding(Spacing.xl)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
