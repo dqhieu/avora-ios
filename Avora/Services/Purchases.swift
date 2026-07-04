@@ -20,8 +20,11 @@ enum AvoraPurchases {
         try await Purchases.shared.offerings().current
     }
 
-    static func purchase(_ package: Package) async throws {
-        _ = try await Purchases.shared.purchase(package: package)
+    /// Returns `true` if the user cancelled the purchase sheet (RevenueCat
+    /// reports this via the result rather than throwing); throws on real errors.
+    static func purchase(_ package: Package) async throws -> Bool {
+        let result = try await Purchases.shared.purchase(package: package)
+        return result.userCancelled
     }
 
     static func restore() async throws {

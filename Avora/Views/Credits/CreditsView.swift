@@ -11,6 +11,11 @@ struct CreditsView: View {
     @State private var busy = false
     @State private var loadFailed = false
 
+    @State private var confettiTrigger = 0
+    @State private var purchasedCredits: Int?
+    @State private var showConfirmation = false
+    @State private var purchaseError: String?
+
     private let cols = [GridItem(.flexible(), spacing: Spacing.md),
                         GridItem(.flexible(), spacing: Spacing.md)]
 
@@ -27,7 +32,7 @@ struct CreditsView: View {
                         priceString: weeklyPackage?.storeProduct.localizedPriceString,
                         isActive: app.profile?.subscriptionActive ?? false,
                         renewsOn: app.profile?.subscriptionPeriodEnd,
-                        onSubscribe: { if let p = weeklyPackage { Task { await buy(p) } } }
+                        onSubscribe: { if let p = weeklyPackage { Task { await buy(p, credits: nil) } } }
                     )
 
                     if !packOptions.isEmpty {
@@ -35,13 +40,13 @@ struct CreditsView: View {
                         VStack(spacing: Spacing.lg) {
                             if let featuredPack {
                                 CreditTicketCard(pack: featuredPack.display, prominent: true) {
-                                    Task { await buy(featuredPack.package) }
+                                    Task { await buy(featuredPack.package, credits: featuredPack.display.credits) }
                                 }
                             }
                             LazyVGrid(columns: cols, spacing: Spacing.lg) {
                                 ForEach(standardPacks) { opt in
                                     CreditTicketCard(pack: opt.display, prominent: false) {
-                                        Task { await buy(opt.package) }
+                                        Task { await buy(opt.package, credits: opt.display.credits) }
                                     }
                                 }
                             }
@@ -62,6 +67,23 @@ struct CreditsView: View {
                 }
             }
             .task { await load() }
+            .overlay { ConfettiView(trigger: confettiTrigger) }
+            .alert("Thank you!", isPresented: $showConfirmation) {
+                Button("Done", role: .cancel) { }
+            } message: {
+                if let purchasedCredits {
+                    Text("\(purchasedCredits) credits have been added to your balance.")
+                } else {
+                    Text("Your subscription is now active.")
+                }
+            }
+            .alert("Purchase failed",
+                   isPresented: Binding(get: { purchaseError != nil },
+                                        set: { if !$0 { purchaseError = nil } })) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(purchaseError ?? "")
+            }
         }
     }
 
@@ -103,15 +125,22 @@ struct CreditsView: View {
         if packOptions.isEmpty { loadFailed = true }
     }
 
-    private func buy(_ package: Package) async {
+    private func buy(_ package: Package, credits: Int?) async {
         busy = true
         defer { busy = false }
         do {
             let before = app.profile?.totalCredits ?? 0
             let wasActive = app.profile?.subscriptionActive ?? false
-            try await AvoraPurchases.purchase(package)
+            let cancelled = try await AvoraPurchases.purchase(package)
+            guard !cancelled else { return }   // cancelled → show nothing
+
+            // Celebrate immediately; the screen stays open.
+            purchasedCredits = credits
+            confettiTrigger += 1
+            showConfirmation = true
+
             // Credits/subscription arrive via the RevenueCat webhook → backend;
-            // poll the profile until it reflects the purchase.
+            // poll the profile so the balance header reflects the purchase.
             for _ in 0..<10 {
                 await app.refreshProfile()
                 let now = app.profile
@@ -119,9 +148,8 @@ struct CreditsView: View {
                     || (now?.subscriptionActive ?? false) && !wasActive { break }
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
-            dismiss()
         } catch {
-            // User cancelled or purchase failed; stay on the screen.
+            purchaseError = error.localizedDescription
         }
     }
 }
