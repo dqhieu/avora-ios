@@ -4,6 +4,7 @@ struct StylesGridView: View {
     @Environment(AppState.self) private var app
     @State private var loadError = false
     @State private var showSettings = false
+    @State private var showCredits = false
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -30,12 +31,18 @@ struct StylesGridView: View {
         }
         .navigationTitle("Styles")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let credits = app.profile?.totalCredits {
+                    CreditsBalancePill(credits: credits) { showCredits = true }
+                }
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
         }
         .sheet(isPresented: $showSettings) {
             NavigationStack { SettingsView().environment(app) }
+        }
+        .sheet(isPresented: $showCredits) {
+            NavigationStack { CreditsView().environment(app) }
         }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .task { await load() }

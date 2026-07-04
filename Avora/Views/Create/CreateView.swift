@@ -8,7 +8,7 @@ struct CreateView: View {
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var sourceImages: [UIImage] = []
     @State private var poller = BatchGenerationPoller()
-    @State private var showPaywall = false
+    @State private var showCredits = false
     @State private var errorText: String?
     @State private var isSubmitting = false
     @State private var isPhotosExpanded = false
@@ -50,7 +50,7 @@ struct CreateView: View {
                 }
             }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView().environment(app) }
+        .sheet(isPresented: $showCredits) { CreditsView().environment(app) }
         .onChange(of: pickerItems) { _, items in Task { await loadPicked(items) } }
         .onChange(of: poller.allTerminal) { _, done in
             if done { Task { await app.refreshProfile() } }
@@ -261,7 +261,7 @@ struct CreateView: View {
         let imgs = sourceImages
         guard !imgs.isEmpty, !isSubmitting else { return }
         let cost = imgs.count * app.config.cost(for: quality)
-        guard (app.profile?.totalCredits ?? 0) >= cost else { showPaywall = true; return }
+        guard (app.profile?.totalCredits ?? 0) >= cost else { showCredits = true; return }
         isSubmitting = true
         defer { isSubmitting = false }
         errorText = nil
@@ -286,7 +286,7 @@ struct CreateView: View {
                 styleId: style.id, inputPaths: paths, quality: quality.backend)
             poller.start(jobIds: jobIds, poll: { try await AvoraAPI.shared.poll(jobId: $0) })
         } catch AvoraError.insufficientCredits {
-            showPaywall = true
+            showCredits = true
         } catch {
             errorText = "Couldn't start generation. Try again."
         }

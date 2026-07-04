@@ -9,6 +9,7 @@ struct CollectionView: View {
     @State private var reloadToken = 0
     @State private var hasLoaded = false
     @State private var showSettings = false
+    @State private var showCredits = false
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
     var body: some View {
@@ -28,12 +29,18 @@ struct CollectionView: View {
         .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let credits = app.profile?.totalCredits {
+                    CreditsBalancePill(credits: credits) { showCredits = true }
+                }
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
         }
         .sheet(isPresented: $showSettings) {
             NavigationStack { SettingsView().environment(app) }
+        }
+        .sheet(isPresented: $showCredits) {
+            NavigationStack { CreditsView().environment(app) }
         }
         .overlay {
             if items.isEmpty && hasLoaded {
