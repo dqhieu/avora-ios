@@ -38,13 +38,19 @@ struct LoginView: View {
             ProgressView()
                 .tint(Color.avoraOnAccent)
         } else {
-            Label("Sign in with Apple", systemImage: "apple.logo")
+            Label("Continue with Apple", systemImage: "apple.logo")
         }
     }
 
     private var googleButton: some View {
         AvoraPrimaryButton(action: logInWithGoogle) {
-            Label("Continue with Google", systemImage: "globe")
+            HStack(spacing: 8) {
+                Image("GoogleLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+                Text("Continue with Google")
+            }
         }
         .disabled(isLoading)
         .preferredColorScheme(.light)
