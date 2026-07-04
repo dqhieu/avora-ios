@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct AvoraApp: App {
@@ -20,6 +21,9 @@ struct AvoraApp: App {
         WindowGroup {
             ContentView()
                 .environment(app)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }

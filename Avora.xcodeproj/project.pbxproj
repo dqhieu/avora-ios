@@ -15,15 +15,29 @@
 		47327BDB2FF20E2C0049310F /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDA2FF20E2C0049310F /* Realtime */; };
 		47327BDD2FF20E2C0049310F /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDC2FF20E2C0049310F /* Storage */; };
 		47327BDF2FF20E2C0049310F /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDE2FF20E2C0049310F /* Supabase */; };
+		47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 47729D1E2FF8E40700CD85CA /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		471C58E12FEEC9B60025C317 /* Avora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Avora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		471C58E42FEEC9B60025C317 /* Exceptions for "Avora" folder in "Avora" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 471C58E02FEEC9B60025C317 /* Avora */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		471C58E32FEEC9B60025C317 /* Avora */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				471C58E42FEEC9B60025C317 /* Exceptions for "Avora" folder in "Avora" target */,
+			);
 			path = Avora;
 			sourceTree = "<group>";
 		};
@@ -42,6 +56,7 @@
 				47327BDB2FF20E2C0049310F /* Realtime in Frameworks */,
 				47327BD52FF20E2C0049310F /* Auth in Frameworks */,
 				47327BD92FF20E2C0049310F /* PostgREST in Frameworks */,
+				47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,6 +107,7 @@
 				47327BDA2FF20E2C0049310F /* Realtime */,
 				47327BDC2FF20E2C0049310F /* Storage */,
 				47327BDE2FF20E2C0049310F /* Supabase */,
+				47729D1E2FF8E40700CD85CA /* GoogleSignIn */,
 			);
 			productName = Avora;
 			productReference = 471C58E12FEEC9B60025C317 /* Avora.app */;
@@ -124,6 +140,7 @@
 			packageReferences = (
 				47327BCE2FF20DF00049310F /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				47729D1D2FF8E40700CD85CA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 471C58E22FEEC9B60025C317 /* Products */;
@@ -288,6 +305,7 @@
 				DEVELOPMENT_TEAM = BH46VD9229;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avora/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Avora saves your generated images to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Avora needs access to your photos to generate restyled images.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -328,6 +346,7 @@
 				DEVELOPMENT_TEAM = BH46VD9229;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avora/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Avora saves your generated images to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Avora needs access to your photos to generate restyled images.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -397,6 +416,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		47729D1D2FF8E40700CD85CA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -439,6 +466,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		47729D1E2FF8E40700CD85CA /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 47729D1D2FF8E40700CD85CA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

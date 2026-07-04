@@ -6,9 +6,17 @@
     {
       "layers" : [
         {
+          "fill" : "automatic",
           "glass" : false,
           "image-name" : "Avora_icon 2.png",
-          "name" : "Avora_icon 2"
+          "name" : "Avora_icon 2",
+          "position" : {
+            "scale" : 0.95,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "shadow" : {
