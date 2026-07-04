@@ -46,6 +46,8 @@ extension Color {
     static let avoraOnAccent        = Color(light: 0x0A0A0B, dark: 0xFAFAFA)
     static let avoraError           = Color(hex: 0xE5564B)
     static let avoraSuccess         = Color(hex: 0x4FB286)
+    static let avoraTicketYellow    = Color(hex: 0xF2C12E)
+    static let avoraTicketInk       = Color(hex: 0x141414)
 }
 
 extension LinearGradient {
