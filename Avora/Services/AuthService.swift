@@ -1,6 +1,8 @@
 import AuthenticationServices
 import CryptoKit
+import GoogleSignIn
 import Supabase
+import UIKit
 
 @MainActor
 enum AuthService {
@@ -17,6 +19,22 @@ enum AuthService {
         }
         try await SupabaseClientProvider.client.auth.signInWithIdToken(
             credentials: OpenIDConnectCredentials(provider: .apple, idToken: idToken, nonce: nonce)
+        )
+    }
+
+    static func signInWithGoogle(presenting: UIViewController) async throws {
+        let nonce = randomNonce()
+        let result = try await GIDSignIn.sharedInstance.signIn(
+            withPresenting: presenting,
+            hint: nil,
+            additionalScopes: nil,
+            nonce: sha256(nonce)
+        )
+        guard let idToken = result.user.idToken?.tokenString else {
+            throw AvoraError.unauthorized
+        }
+        try await SupabaseClientProvider.client.auth.signInWithIdToken(
+            credentials: OpenIDConnectCredentials(provider: .google, idToken: idToken, nonce: nonce)
         )
     }
 
