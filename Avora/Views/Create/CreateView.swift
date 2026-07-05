@@ -249,6 +249,7 @@ struct CreateView: View {
                     .font(.avoraCallout)
                     .foregroundStyle(Color.avoraTextTertiary)
             }
+            .contentShape(.rect)
             .padding(Spacing.md)
             .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         }
