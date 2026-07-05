@@ -10,6 +10,11 @@ struct StylesGridView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: cols, spacing: 12) {
+                NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
+                    CustomStyleCard()
+                }
+                .buttonStyle(.plain)
+
                 ForEach(app.styles) { style in
                     NavigationLink(value: CreateRoute(style: style, placeholder: nil)) {
                         StyleCard(style: style)
@@ -102,6 +107,40 @@ private struct StyleCard: View {
                 StyleBadge(text: badge)
                     .padding(8)
             }
+        }
+    }
+}
+
+private struct CustomStyleCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+    var body: some View {
+        VStack(alignment: .leading) {
+            let shape = RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+            let content = Color.clear
+                .contentShape(.rect)
+                .aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    VStack(spacing: Spacing.sm) {
+                        Image(systemName: "pencil.and.scribble")
+                            .font(.avoraLargeTitle)
+                        Text("Write your own")
+                            .font(.avoraFootnote)
+                    }
+                    .foregroundStyle(Color.avoraTextSecondary)
+                }
+                .clipShape(shape)
+            Group {
+                if #available(iOS 26.0, *) {
+                    content.glassEffect(in: shape)
+                } else {
+                    content
+                        .background(colorScheme == .dark ? Color(red: 0.15, green: 0.15, blue: 0.15) : .white, in: shape)
+                        .overlay(shape.stroke(Color.secondary.opacity(0.5), lineWidth: 0.5))
+                }
+            }
+            Text("Custom")
+                .font(.avoraHeadline)
+                .padding(.top, Spacing.xs)
         }
     }
 }
