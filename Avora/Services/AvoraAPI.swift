@@ -65,16 +65,24 @@ struct AvoraAPI {
         return path
     }
 
-    func submitBatch(styleId: String, inputPaths: [String], quality: String) async throws -> [UUID] {
+    func submitBatch(styleId: String?, inputPaths: [String], quality: String,
+                     customPrompt: String? = nil) async throws -> [UUID] {
         #if DEBUG
         if AvoraConfig.isMockGenerationEnabled { return inputPaths.map { _ in UUID() } }
         #endif
-        struct Body: Encodable { let style_id: String; let input_paths: [String]; let quality: String }
+        struct Body: Encodable {
+            let style_id: String?
+            let input_paths: [String]
+            let quality: String
+            let custom_prompt: String?
+        }
         struct Resp: Decodable { let job_ids: [UUID] }
         do {
             let resp: Resp = try await db.functions.invoke(
                 "submit-generation-batch",
-                options: .init(body: Body(style_id: styleId, input_paths: inputPaths, quality: quality))
+                options: .init(body: Body(
+                    style_id: styleId, input_paths: inputPaths,
+                    quality: quality, custom_prompt: customPrompt))
             )
             return resp.job_ids
         } catch let FunctionsError.httpError(code: code, data: _) where code == 402 {
@@ -102,7 +110,7 @@ struct AvoraAPI {
 
     func listGenerations(cursor: Date?) async throws -> (items: [Generation], next: Date?) {
         let baseQuery = db.from("generations")
-            .select("id,style_id,status,output_path,created_at")
+            .select("id,style_id,custom_prompt,status,output_path,created_at")
         let filtered = cursor.map { c in
             baseQuery.lt("created_at", value: AvoraAPI.iso8601.string(from: c))
         } ?? baseQuery
