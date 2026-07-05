@@ -27,8 +27,7 @@ struct CommunityView: View {
             .padding(Spacing.sm)
         }
         .navigationTitle("Community")
-        // TODO: restored in the detail-view task — CommunityDetailView is added in Task 6.
-        // .navigationDestination(for: CommunityItem.self) { CommunityDetailView(item: $0) }
+        .navigationDestination(for: CommunityItem.self) { CommunityDetailView(item: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
             ToolbarItem(placement: .principal) {
