@@ -18,8 +18,6 @@ struct ScanReveal: View {
 
     /// 0...1 looping line position while generating.
     @State private var scanY: CGFloat = 0
-    /// True only while a job is actively scanning (line hidden before Generate).
-    @State private var isScanning = false
     @State private var resultImage: UIImage?
     /// True if the result download failed — keep the source, drop the line.
     @State private var didFail = false
@@ -32,7 +30,7 @@ struct ScanReveal: View {
                     cardImage(resultImage)
                 } else {
                     cardImage(source)
-                    if isScanning {
+                    if isGenerating {
                         scanLine
                             .offset(y: h * scanY - lineThickness / 2)
                     }
@@ -40,7 +38,7 @@ struct ScanReveal: View {
             }
             .frame(width: geo.size.width, height: h)
         }
-        .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+        .clipShape(Rectangle())
         .onAppear { if isGenerating { startScanning() } }
         .onChange(of: isGenerating) { _, gen in if gen { startScanning() } }
         .task(id: resultPath) { await loadResult() }
@@ -71,7 +69,6 @@ struct ScanReveal: View {
     // Loop the line down→up→down while the job runs.
     private func startScanning() {
         guard resultImage == nil, !didFail else { return }
-        isScanning = true
         scanY = 0
         withAnimation(.easeInOut(duration: loopDuration).repeatForever(autoreverses: true)) {
             scanY = 1
