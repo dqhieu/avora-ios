@@ -31,11 +31,22 @@ Deno.serve(async () => {
     const msgId = m.msg_id as number;
     try {
       const { data: gen } = await db.from("generations")
-        .select("id,user_id,style_id,input_path,quality,status").eq("id", jobId).single();
+        .select("id,user_id,style_id,custom_prompt,input_path,quality,status").eq("id", jobId).single();
       if (!gen || gen.status !== "pending") { await archive(db, msgId); continue; }
 
-      const { data: style } = await db.from("styles")
-        .select("prompt_template,default_size").eq("id", gen.style_id).single();
+      // Custom jobs carry their own words (no preset row); preset jobs load the
+      // curated template. size "auto" matches styles.default_size for custom.
+      let prompt: string;
+      let size: string;
+      if (gen.custom_prompt) {
+        prompt = `Restyle this photo: ${gen.custom_prompt}. Preserve the subject's likeness and pose. Do not add text or watermarks.`;
+        size = "auto";
+      } else {
+        const { data: style } = await db.from("styles")
+          .select("prompt_template,default_size").eq("id", gen.style_id).single();
+        prompt = style!.prompt_template;
+        size = style!.default_size;
+      }
 
       const { data: blob } = await db.storage.from("inputs").download(gen.input_path);
       const bytes = new Uint8Array(await blob!.arrayBuffer());
@@ -44,7 +55,7 @@ Deno.serve(async () => {
 
       const result = await runEdit({
         imageBytes: bytes, filename, contentType,
-        prompt: style!.prompt_template, size: style!.default_size, quality: gen.quality,
+        prompt, size, quality: gen.quality,
       });
 
       const jpeg = await toJpeg(decodeB64(result.b64));
