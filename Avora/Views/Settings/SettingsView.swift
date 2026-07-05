@@ -5,14 +5,23 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDelete = false
     @State private var deleteError: String?
+    @State private var editingUsername = false
     #if DEBUG
     @AppStorage(AvoraConfig.mockGenerationKey) private var mockGeneration = false
     #endif
 
     var body: some View {
         List {
-            if let email = app.userEmail {
-                Section("Account") {
+            Section("Account") {
+                if let username = app.profile?.username {
+                    Button {
+                        editingUsername = true
+                    } label: {
+                        LabeledContent("Username", value: username)
+                    }
+                    .tint(.primary)
+                }
+                if let email = app.userEmail {
                     LabeledContent("Email", value: email)
                 }
             }
@@ -45,6 +54,9 @@ struct SettingsView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }
             }
+        }
+        .sheet(isPresented: $editingUsername) {
+            EditUsernameSheet(current: app.profile?.username ?? "")
         }
         .alert("Error", isPresented: Binding(
             get: { deleteError != nil },

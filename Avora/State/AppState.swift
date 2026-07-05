@@ -47,6 +47,16 @@ final class AppState {
         profile?.signupBonusSeen = true
     }
 
+    /// Changes the username via the authoritative RPC. On success, updates the
+    /// local profile so Settings reflects the new name without a refetch.
+    func updateUsername(_ newUsername: String) async -> AvoraAPI.SetUsernameResult {
+        let result = (try? await AvoraAPI.shared.setUsername(newUsername)) ?? .invalid
+        if result == .ok {
+            profile?.username = newUsername
+        }
+        return result
+    }
+
     func loadConfig() async {
         if let fetched = try? await AvoraAPI.shared.fetchCreditConfig() {
             config = fetched
