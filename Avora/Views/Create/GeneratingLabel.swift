@@ -38,8 +38,7 @@ struct GeneratingLabel: View {
 
     var body: some View {
         Text(Self.messages[index])
-            .animation(.snappy, value: index)
-            .contentTransition(.opacity)
+            .contentTransition(.numericText())
             .task(id: isActive) { await run() }
     }
 
@@ -49,7 +48,7 @@ struct GeneratingLabel: View {
         while !Task.isCancelled {
             try? await Task.sleep(nanoseconds: Self.intervalNanos)
             if Task.isCancelled { return }
-            withAnimation(.easeInOut(duration: 0.4)) {
+            withAnimation {
                 index = Self.nextIndex(after: index)
             }
         }
