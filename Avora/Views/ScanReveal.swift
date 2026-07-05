@@ -10,8 +10,8 @@ struct ScanReveal: View {
     let resultPath: String?
     let isGenerating: Bool
 
-    /// Seconds for one top→bottom pass while waiting for the result.
-    private let loopDuration: Double = 1.8
+    /// Seconds for one pass (down, then up) while waiting for the result.
+    private let loopDuration: Double = 3.0
     /// Seconds for the single sweep that wipes the finished result in.
     private let revealDuration: Double = 1.2
     /// Height of the scan line in points.
@@ -74,12 +74,12 @@ struct ScanReveal: View {
         .frame(maxWidth: .infinity)
     }
 
-    // Loop the line top→bottom while the job runs.
+    // Loop the line down→up→down while the job runs.
     private func startScanning() {
         guard resultImage == nil, !isRevealing else { return }
         lineOpacity = 1
         scanY = 0
-        withAnimation(.linear(duration: loopDuration).repeatForever(autoreverses: false)) {
+        withAnimation(.easeInOut(duration: loopDuration).repeatForever(autoreverses: true)) {
             scanY = 1
         }
     }
