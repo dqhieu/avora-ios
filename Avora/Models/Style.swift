@@ -24,4 +24,13 @@ extension Style {
         else { return nil }
         return badgeText
     }
+
+    /// Client-only navigation token for the custom-prompt flow. Never sent to the
+    /// backend — custom generations submit `style_id: nil`. Provides the non-optional
+    /// `Style` that `CreateRoute` and the navigation title need.
+    static let custom = Style(
+        id: "custom", name: "Custom", sampleImagePath: nil,
+        active: false, sortOrder: -1, badgeText: nil
+    )
 }
+

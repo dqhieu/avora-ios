@@ -5,6 +5,7 @@ enum GenStatus: String, Codable { case pending, completed, failed }
 struct Generation: Codable, Identifiable, Hashable {
     let id: UUID
     let styleId: String?
+    let customPrompt: String?
     let status: GenStatus
     let outputPath: String?
     let createdAt: Date?
@@ -12,6 +13,7 @@ struct Generation: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, status
         case styleId = "style_id"
+        case customPrompt = "custom_prompt"
         case outputPath = "output_path"
         case createdAt = "created_at"
     }

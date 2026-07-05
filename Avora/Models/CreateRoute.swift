@@ -14,4 +14,5 @@ struct RemoteImageRef: Hashable {
 struct CreateRoute: Hashable {
     let style: Style
     var placeholder: RemoteImageRef?
+    var customPrompt: String? = nil
 }
