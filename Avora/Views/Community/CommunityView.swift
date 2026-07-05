@@ -29,11 +29,14 @@ struct CommunityView: View {
         .navigationDestination(for: CommunityItem.self) { CommunityDetailView(item: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Picker("Sort", selection: $sort) {
-                    ForEach(CommunitySort.allCases, id: \.self) { Text($0.label).tag($0) }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Sort", selection: $sort) {
+                        ForEach(CommunitySort.allCases, id: \.self) { Text($0.label).tag($0) }
+                    }
+                } label: {
+                    Label("Sort", systemImage: "arrow.up.arrow.down")
                 }
-                .pickerStyle(.segmented)
             }
         }
         .overlay {
