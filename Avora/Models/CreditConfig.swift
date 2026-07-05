@@ -24,7 +24,7 @@ struct CreditConfig: Codable {
         switch quality {
         case .default: costLow
         case .high:    costMedium
-        case .ultra:   costHigh
+        case .best:    costHigh
         }
     }
 
@@ -36,6 +36,6 @@ struct CreditConfig: Codable {
     /// (and let the user burn) a stale fallback amount.
     static let fallback = CreditConfig(
         weeklyAmount: 1000, signupExtra: 0, generationCost: 20, extraPack: 500,
-        costLow: 20, costMedium: 30, costHigh: 100
+        costLow: 20, costMedium: 30, costHigh: 120
     )
 }

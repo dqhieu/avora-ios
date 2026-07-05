@@ -3,7 +3,7 @@ select plan(14);
 
 insert into auth.users (id, email) values ('55555555-5555-5555-5555-555555555555','e@test.dev');
 insert into public.styles (id, name, prompt_template) values ('bs1','BS1','x');
--- credit_config seeds cost_low=20, cost_medium=30, cost_high=100
+-- credit_config seeds cost_low=20, cost_medium=30, cost_high=120
 
 -- LOW: 20/img. weekly 100, batch of 2 low = 40 -> weekly 60.
 update public.profiles set weekly_credits = 100, extra_credits = 0
@@ -38,9 +38,9 @@ select is((select count(*)::int from public.generations
                and charged_amount=30 and quality='medium'),
           2, 'medium: each row charged 30 and stored quality medium');
 
--- HIGH: 100/img. reset weekly 100, batch of 1 high = 100 -> weekly 0.
+-- HIGH: 120/img. reset weekly 120, batch of 1 high = 120 -> weekly 0.
 delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
-update public.profiles set weekly_credits = 100, extra_credits = 0
+update public.profiles set weekly_credits = 120, extra_credits = 0
   where id = '55555555-5555-5555-5555-555555555555';
 select is(
   array_length(
@@ -48,11 +48,11 @@ select is(
       array['55555555-5555-5555-5555-555555555555/a.png'], 'high'), 1),
   1, 'high: returns 1 job id');
 select is((select weekly_credits from public.profiles where id='55555555-5555-5555-5555-555555555555'),
-          0, 'high: weekly 100 -> 0 (1 x 100)');
+          0, 'high: weekly 120 -> 0 (1 x 120)');
 select is((select count(*)::int from public.generations
              where user_id='55555555-5555-5555-5555-555555555555'
-               and charged_amount=100 and quality='high'),
-          1, 'high: row charged 100 and stored quality high');
+               and charged_amount=120 and quality='high'),
+          1, 'high: row charged 120 and stored quality high');
 
 -- STRADDLE at medium: weekly 30 + extra 30, batch of 2 medium = 60 -> one weekly, one extra.
 delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
@@ -76,7 +76,7 @@ select throws_ok(
        array['55555555-5555-5555-5555-555555555555/c.png'], 'ultra') $$,
   'P0001', 'bad_quality', 'unknown quality raises bad_quality');
 
--- INSUFFICIENT: high needs 100, only 50 available -> raises and deducts nothing.
+-- INSUFFICIENT: high needs 120, only 50 available -> raises and deducts nothing.
 delete from public.generations where user_id='55555555-5555-5555-5555-555555555555';
 update public.profiles set weekly_credits = 50, extra_credits = 0
   where id = '55555555-5555-5555-5555-555555555555';

@@ -4,7 +4,7 @@ import Foundation
 /// to the backend `quality` value sent to the image API. Cost is not encoded here
 /// — it is read from `CreditConfig` keyed by `backend`.
 enum GenerationQuality: String, CaseIterable, Identifiable {
-    case `default`, high, ultra
+    case `default`, high, best
 
     var id: String { rawValue }
 
@@ -13,7 +13,7 @@ enum GenerationQuality: String, CaseIterable, Identifiable {
         switch self {
         case .default: "low"
         case .high:    "medium"
-        case .ultra:   "high"
+        case .best:    "high"
         }
     }
 
@@ -22,7 +22,7 @@ enum GenerationQuality: String, CaseIterable, Identifiable {
         switch self {
         case .default: "Default"
         case .high:    "High"
-        case .ultra:   "Ultra"
+        case .best:    "Best"
         }
     }
 }
