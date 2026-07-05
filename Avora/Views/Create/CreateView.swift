@@ -14,6 +14,7 @@ struct CreateView: View {
     @State private var isPhotosExpanded = false
     @State private var quality: GenerationQuality = .default
     @State private var promptText: String
+    @State private var showPromptEditor = false
 
     init(route: CreateRoute) {
         self.style = route.style
@@ -65,12 +66,23 @@ struct CreateView: View {
                 }
             }
         }
+        .sheet(isPresented: $showPromptEditor) {
+            PromptEditorPopup(
+                initialText: promptText,
+                onCancel: { showPromptEditor = false },
+                onSave: { text in
+                    promptText = text
+                    showPromptEditor = false
+                }
+            )
+        }
         .sheet(isPresented: $showCredits) { CreditsView().environment(app) }
         .onChange(of: pickerItems) { _, items in Task { await loadPicked(items) } }
         .onChange(of: poller.allTerminal) { _, done in
             if done { Task { await app.refreshProfile() } }
         }
         .onDisappear { poller.stop() }
+        .ignoresSafeArea(.keyboard, edges: .all)
     }
 
     // The photo area is shown in every state — picking, generating, and done. A single
@@ -85,6 +97,13 @@ struct CreateView: View {
                     } else {
                         RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                             .fill(Color.avoraSurface)
+                        VStack(spacing: Spacing.sm) {
+                            Image(systemName: "photo.badge.plus")
+                                .font(.system(size: 44))
+                            Text("Tap to add a photo")
+                                .font(.avoraFootnote)
+                        }
+                        .foregroundStyle(Color.avoraTextTertiary)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -217,17 +236,24 @@ struct CreateView: View {
     }
 
     private var promptField: some View {
-        VStack(alignment: .trailing, spacing: Spacing.xs) {
-            TextField("Describe your style…", text: $promptText, axis: .vertical)
-                .lineLimit(2...4)
-                .font(.avoraBody)
-                .padding(Spacing.md)
-                .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
-                .disabled(isWorking)
-            Text("\(trimmedPrompt.count)/1000")
-                .font(.avoraCaption2)
-                .foregroundStyle(trimmedPrompt.count > 1000 ? Color.avoraError : Color.avoraTextTertiary)
+        Button {
+            showPromptEditor = true
+        } label: {
+            HStack(spacing: Spacing.md) {
+                Text(trimmedPrompt.isEmpty ? "Describe your style…" : promptText)
+                    .font(.avoraBody)
+                    .foregroundStyle(trimmedPrompt.isEmpty ? Color.avoraTextTertiary : Color.avoraTextPrimary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "square.and.pencil")
+                    .font(.avoraCallout)
+                    .foregroundStyle(Color.avoraTextTertiary)
+            }
+            .padding(Spacing.md)
+            .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         }
+        .buttonStyle(.plain)
+        .disabled(isWorking)
     }
 
     @ViewBuilder private var controls: some View {
