@@ -38,6 +38,7 @@ struct GeneratingLabel: View {
 
     var body: some View {
         Text(Self.messages[index])
+            .animation(.snappy, value: index)
             .contentTransition(.opacity)
             .task(id: isActive) { await run() }
     }
