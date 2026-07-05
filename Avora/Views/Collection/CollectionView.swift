@@ -127,6 +127,12 @@ private struct CreationDetailView: View {
                 }
                 .buttonStyle(AvoraPrimaryButtonStyle())
                 .padding(.horizontal, Spacing.lg)
+            } else if let prompt = generation.customPrompt {
+                NavigationLink(value: CreateRoute(style: .custom, placeholder: placeholder, customPrompt: prompt)) {
+                    Label("Create with this prompt", systemImage: "wand.and.stars")
+                }
+                .buttonStyle(AvoraPrimaryButtonStyle())
+                .padding(.horizontal, Spacing.lg)
             }
         }
         .padding(.vertical, Spacing.lg)
