@@ -9,21 +9,7 @@ struct StylesGridView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                HStack {
-                    Text("Styles")
-                        .font(.avoraTitle2)
-                    Spacer()
-                    NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
-                        Text("Write your own")
-                            .font(.avoraSubheadline)
-                            .foregroundStyle(Color.avoraAccent)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal)
-                .padding(.top)
-
+            Section {
                 LazyVGrid(columns: cols, spacing: 12) {
                     ForEach(app.styles) { style in
                         NavigationLink(value: CreateRoute(style: style, placeholder: nil)) {
@@ -31,18 +17,33 @@ struct StylesGridView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                }.padding()
-
-                if loadError && app.styles.isEmpty {
-                    ContentUnavailableView {
-                        Label("Couldn’t load styles", systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text("Check your connection and try again.")
-                    } actions: {
-                        Button("Retry") { Task { await load(force: true) } }
-                    }
-                    .padding(.top, 40)
                 }
+                .padding([.bottom, .horizontal])
+            } header: {
+                HStack {
+                    Text("All styles")
+                        .font(.avoraTitle2)
+                    Spacer()
+                    NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
+                        Text("Custom")
+                            .font(.avoraSubheadline)
+                            .foregroundStyle(Color.avoraAccent)
+                    }
+                    .contentShape(.rect)
+                    .buttonStyle(AvoraCustomButtonStyle())
+                }
+                .padding(.horizontal, Spacing.xl)
+            }
+
+            if loadError && app.styles.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t load styles", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text("Check your connection and try again.")
+                } actions: {
+                    Button("Retry") { Task { await load(force: true) } }
+                }
+                .padding(.top, 40)
             }
         }
         .navigationTitle("Avora")
@@ -84,8 +85,8 @@ private struct StyleCard: View {
             tile
             Text(style.name)
                 .font(.avoraHeadline)
-                .padding(.top, Spacing.xs)
         }
+        .padding(.bottom, Spacing.xs)
     }
 
     @ViewBuilder

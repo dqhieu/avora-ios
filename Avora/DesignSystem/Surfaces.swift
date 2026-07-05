@@ -47,6 +47,29 @@ struct AvoraPrimaryButtonStyle: ButtonStyle {
     }
 }
 
+struct AvoraCustomButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        let label = configuration.label
+            .font(.avoraButton)
+            .padding(.vertical, 8)
+            .padding(.horizontal)
+            .foregroundStyle(Color.avoraOnAccent)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+
+        if #available(iOS 26.0, *) {
+            return AnyView(label.glassEffect(.regular.interactive(), in: .capsule))
+        } else {
+            return AnyView(
+                label
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay { Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 1) }
+                    .scaleEffect(configuration.isPressed ? 0.97 : 1)
+                    .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+            )
+        }
+    }
+}
+
 struct AvoraPrimaryButton<Label: View>: View {
     private let action: () -> Void
     @ViewBuilder private let label: () -> Label
