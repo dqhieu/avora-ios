@@ -25,6 +25,22 @@ enum SnapshotStore {
 
     static func clearCollection() { try? FileManager.default.removeItem(at: collectionURL) }
 
+    private static func communityURL(_ sort: CommunitySort) -> URL {
+        directory.appendingPathComponent("community-\(sort.rawValue).json")
+    }
+
+    static func loadCommunity(_ sort: CommunitySort) -> [CommunityItem]? {
+        load([CommunityItem].self, from: communityURL(sort))
+    }
+    static func saveCommunity(_ sort: CommunitySort, _ items: [CommunityItem]) {
+        save(items, to: communityURL(sort))
+    }
+    static func clearCommunity() {
+        for sort in CommunitySort.allCases {
+            try? FileManager.default.removeItem(at: communityURL(sort))
+        }
+    }
+
     private static func load<T: Decodable>(_ type: T.Type, from url: URL) -> T? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(T.self, from: data)

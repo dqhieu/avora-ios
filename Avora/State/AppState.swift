@@ -93,5 +93,6 @@ final class AppState {
         isAuthenticated = false
         profile = nil
         SnapshotStore.clearCollection()
+        SnapshotStore.clearCommunity()
     }
 }
