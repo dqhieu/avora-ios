@@ -9,12 +9,21 @@ struct StylesGridView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: cols, spacing: 12) {
+            HStack {
+                Text("Styles")
+                    .font(.avoraTitle2)
+                Spacer()
                 NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
-                    CustomStyleCard()
+                    Text("Write your own")
+                        .font(.avoraSubheadline)
+                        .foregroundStyle(Color.avoraAccent)
                 }
                 .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            .padding(.top)
 
+            LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(app.styles) { style in
                     NavigationLink(value: CreateRoute(style: style, placeholder: nil)) {
                         StyleCard(style: style)
@@ -34,7 +43,7 @@ struct StylesGridView: View {
                 .padding(.top, 40)
             }
         }
-        .navigationTitle("Styles")
+        .navigationTitle("Avora")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
@@ -107,40 +116,6 @@ private struct StyleCard: View {
                 StyleBadge(text: badge)
                     .padding(8)
             }
-        }
-    }
-}
-
-private struct CustomStyleCard: View {
-    @Environment(\.colorScheme) private var colorScheme
-    var body: some View {
-        VStack(alignment: .leading) {
-            let shape = RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
-            let content = Color.clear
-                .contentShape(.rect)
-                .aspectRatio(1, contentMode: .fit)
-                .overlay {
-                    VStack(spacing: Spacing.sm) {
-                        Image(systemName: "pencil.and.scribble")
-                            .font(.avoraLargeTitle)
-                        Text("Write your own")
-                            .font(.avoraFootnote)
-                    }
-                    .foregroundStyle(Color.avoraTextSecondary)
-                }
-                .clipShape(shape)
-            Group {
-                if #available(iOS 26.0, *) {
-                    content.glassEffect(in: shape)
-                } else {
-                    content
-                        .background(colorScheme == .dark ? Color(red: 0.15, green: 0.15, blue: 0.15) : .white, in: shape)
-                        .overlay(shape.stroke(Color.secondary.opacity(0.5), lineWidth: 0.5))
-                }
-            }
-            Text("Custom")
-                .font(.avoraHeadline)
-                .padding(.top, Spacing.xs)
         }
     }
 }
