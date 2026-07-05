@@ -9,7 +9,7 @@ struct EditUsernameSheet: View {
     @State private var checkTask: Task<Void, Never>?
 
     enum Status: Equatable {
-        case idle, checking, available, taken, invalid, saving
+        case idle, checking, available, taken, invalid, checkFailed, saving
     }
 
     init(current: String) {
@@ -49,6 +49,7 @@ struct EditUsernameSheet: View {
         case .available: Text("Available").foregroundStyle(.green)
         case .taken:     Text("That username is taken.").foregroundStyle(.red)
         case .invalid:   Text("Use 3–20 lowercase letters, numbers, or underscore (at least one letter).").foregroundStyle(.red)
+        case .checkFailed: Text("Couldn't check availability. Check your connection and try again.").foregroundStyle(.red)
         case .saving:    Text("Saving…")
         }
     }
@@ -68,9 +69,14 @@ struct EditUsernameSheet: View {
         checkTask = Task {
             try? await Task.sleep(nanoseconds: 400_000_000)
             if Task.isCancelled { return }
-            let available = (try? await AvoraAPI.shared.isUsernameAvailable(candidate)) ?? false
-            if Task.isCancelled || candidate != text { return }
-            status = available ? .available : .taken
+            do {
+                let available = try await AvoraAPI.shared.isUsernameAvailable(candidate)
+                if Task.isCancelled || candidate != text { return }
+                status = available ? .available : .taken
+            } catch {
+                if Task.isCancelled || candidate != text { return }
+                status = .checkFailed
+            }
         }
     }
 
