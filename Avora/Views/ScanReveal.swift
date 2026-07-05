@@ -1,10 +1,9 @@
 import SwiftUI
 
 /// A generation card that keeps the source photo sharp while a glowing accent
-/// line sweeps top→bottom on a loop ("scanning"). When the result arrives, one
-/// final sweep wipes the finished image in from the top: everything above the
-/// line shows the result, everything below still shows the source, so the new
-/// image is unveiled row by row. Replaces the blur-based FocusReveal.
+/// line sweeps down→up→down on a loop ("scanning"). Once the result finishes
+/// downloading it simply replaces the source — no reveal animation. Replaces
+/// the blur-based FocusReveal.
 struct ScanReveal: View {
     let source: UIImage
     let resultPath: String?
@@ -12,8 +11,6 @@ struct ScanReveal: View {
 
     /// Seconds for one pass (down, then up) while waiting for the result.
     private let loopDuration: Double = 3.0
-    /// Seconds for the single sweep that wipes the finished result in.
-    private let revealDuration: Double = 1.2
     /// Height of the scan line in points.
     private let lineThickness: CGFloat = 2.5
     /// Blur radius of the glow copy behind the line.
@@ -21,35 +18,30 @@ struct ScanReveal: View {
 
     /// 0...1 looping line position while generating.
     @State private var scanY: CGFloat = 0
-    /// 0...1 wipe position; also the height fraction of the revealed result.
-    @State private var revealProgress: CGFloat = 0
     @State private var resultImage: UIImage?
-    /// Once true, the visible line follows `revealProgress` instead of `scanY`.
-    @State private var isRevealing = false
-    @State private var lineOpacity: CGFloat = 0
+    /// True if the result download failed — keep the source, drop the line.
+    @State private var didFail = false
 
     var body: some View {
         GeometryReader { geo in
             let h = geo.size.height
-            let lineFraction = isRevealing ? revealProgress : scanY
             ZStack(alignment: .top) {
-                cardImage(source)
                 if let resultImage {
                     cardImage(resultImage)
-                        .mask(alignment: .top) {
-                            Rectangle().frame(height: h * revealProgress)
-                        }
+                } else {
+                    cardImage(source)
+                    if !didFail {
+                        scanLine
+                            .offset(y: h * scanY - lineThickness / 2)
+                    }
                 }
-                scanLine
-                    .offset(y: h * lineFraction - lineThickness / 2)
-                    .opacity(lineOpacity)
             }
             .frame(width: geo.size.width, height: h)
         }
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
         .onAppear { if isGenerating { startScanning() } }
         .onChange(of: isGenerating) { _, gen in if gen { startScanning() } }
-        .task(id: resultPath) { await revealResult() }
+        .task(id: resultPath) { await loadResult() }
     }
 
     private func cardImage(_ img: UIImage) -> some View {
@@ -76,32 +68,21 @@ struct ScanReveal: View {
 
     // Loop the line down→up→down while the job runs.
     private func startScanning() {
-        guard resultImage == nil, !isRevealing else { return }
-        lineOpacity = 1
+        guard resultImage == nil, !didFail else { return }
         scanY = 0
         withAnimation(.easeInOut(duration: loopDuration).repeatForever(autoreverses: true)) {
             scanY = 1
         }
     }
 
-    // Download the result, then run one top→bottom sweep that wipes it in.
-    private func revealResult() async {
+    // Download the result and show it in place of the source once ready.
+    private func loadResult() async {
         guard let resultPath else { return }
         do {
-            let img = try await ImageStore.shared.image(for: resultPath)
-            resultImage = img
-            isRevealing = true
-            revealProgress = 0
-            lineOpacity = 1
-            withAnimation(.easeInOut(duration: revealDuration)) {
-                revealProgress = 1
-            } completion: {
-                withAnimation(.easeOut(duration: 0.3)) { lineOpacity = 0 }
-            }
+            resultImage = try await ImageStore.shared.image(for: resultPath)
         } catch {
-            // Download failed: stop scanning, keep the sharp source, fade the line out.
-            isRevealing = true
-            withAnimation(.easeOut(duration: 0.3)) { lineOpacity = 0 }
+            // Download failed: keep the sharp source and drop the scan line.
+            didFail = true
         }
     }
 }
