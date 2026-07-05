@@ -6,6 +6,7 @@ struct Profile: Codable {
     let subscriptionActive: Bool
     let subscriptionPeriodEnd: Date?
     var signupBonusSeen: Bool
+    var username: String?
     var totalCredits: Int { weeklyCredits + extraCredits }
 
     enum CodingKeys: String, CodingKey {
@@ -14,5 +15,6 @@ struct Profile: Codable {
         case subscriptionActive = "subscription_active"
         case subscriptionPeriodEnd = "subscription_period_end"
         case signupBonusSeen = "signup_bonus_seen"
+        case username
     }
 }

@@ -26,7 +26,7 @@ struct AvoraAPI {
     func fetchProfile() async throws -> Profile {
         let uid = try await currentUserId()
         return try await db.from("profiles")
-            .select("weekly_credits,extra_credits,subscription_active,subscription_period_end,signup_bonus_seen")
+            .select("weekly_credits,extra_credits,subscription_active,subscription_period_end,signup_bonus_seen,username")
             .eq("id", value: uid.uuidString)
             .single()
             .execute()
@@ -35,6 +35,22 @@ struct AvoraAPI {
 
     func markSignupBonusSeen() async throws {
         try await db.rpc("mark_signup_bonus_seen").execute()
+    }
+
+    enum SetUsernameResult: String, Decodable { case ok, taken, invalid }
+
+    func isUsernameAvailable(_ candidate: String) async throws -> Bool {
+        try await db.rpc("is_username_available", params: ["candidate": candidate])
+            .execute()
+            .value
+    }
+
+    func setUsername(_ newUsername: String) async throws -> SetUsernameResult {
+        let raw: String = try await db.rpc(
+            "set_username", params: ["new_username": newUsername])
+            .execute()
+            .value
+        return SetUsernameResult(rawValue: raw) ?? .invalid
     }
 
     func fetchCreditPacks() async throws -> [CreditPack] {
