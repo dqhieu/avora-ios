@@ -126,7 +126,7 @@ struct AvoraAPI {
 
     func listGenerations(cursor: Date?) async throws -> (items: [Generation], next: Date?) {
         let baseQuery = db.from("generations")
-            .select("id,style_id,custom_prompt,status,output_path,created_at")
+            .select("id,style_id,custom_prompt,status,output_path,created_at,shared_at")
         let filtered = cursor.map { c in
             baseQuery.lt("created_at", value: AvoraAPI.iso8601.string(from: c))
         } ?? baseQuery
@@ -138,6 +138,58 @@ struct AvoraAPI {
         let items = Array(all.prefix(20))
         let next = all.count > 20 ? items.last?.createdAt : nil
         return (items, next)
+    }
+
+    private static let communityPageSize = 20
+
+    func communityLatest(before cursor: Date?) async throws
+        -> (items: [CommunityItem], next: Date?) {
+        let base = db.from("community_feed")
+            .select("id,output_path,style_id,custom_prompt,like_count,username,liked_by_me,shared_at")
+        let filtered = cursor.map { c in
+            base.lt("shared_at", value: AvoraAPI.iso8601.string(from: c))
+        } ?? base
+        let all: [CommunityItem] = try await filtered
+            .order("shared_at", ascending: false)
+            .limit(AvoraAPI.communityPageSize + 1)
+            .execute()
+            .value
+        let items = Array(all.prefix(AvoraAPI.communityPageSize))
+        let next = all.count > AvoraAPI.communityPageSize ? items.last?.sharedAt : nil
+        return (items, next)
+    }
+
+    func communityMostLiked(offset: Int) async throws
+        -> (items: [CommunityItem], next: Int?) {
+        let size = AvoraAPI.communityPageSize
+        let all: [CommunityItem] = try await db.from("community_feed")
+            .select("id,output_path,style_id,custom_prompt,like_count,username,liked_by_me,shared_at")
+            .order("like_count", ascending: false)
+            .order("shared_at", ascending: false)
+            .range(from: offset, to: offset + size)   // inclusive; fetches size+1
+            .execute()
+            .value
+        let items = Array(all.prefix(size))
+        let next = all.count > size ? offset + size : nil
+        return (items, next)
+    }
+
+    func shareCreation(_ id: UUID) async throws {
+        try await db.rpc("share_creation", params: ["gen_id": id.uuidString]).execute()
+    }
+
+    func unshareCreation(_ id: UUID) async throws {
+        try await db.rpc("unshare_creation", params: ["gen_id": id.uuidString]).execute()
+    }
+
+    func likeCreation(_ id: UUID) async throws -> Int {
+        try await db.rpc("like_creation", params: ["gen_id": id.uuidString])
+            .execute().value
+    }
+
+    func unlikeCreation(_ id: UUID) async throws -> Int {
+        try await db.rpc("unlike_creation", params: ["gen_id": id.uuidString])
+            .execute().value
     }
 
     func signedOutputURL(_ path: String) async throws -> URL {

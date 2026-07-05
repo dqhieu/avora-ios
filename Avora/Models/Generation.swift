@@ -9,6 +9,7 @@ struct Generation: Codable, Identifiable, Hashable {
     let status: GenStatus
     let outputPath: String?
     let createdAt: Date?
+    let sharedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, status
@@ -16,6 +17,7 @@ struct Generation: Codable, Identifiable, Hashable {
         case customPrompt = "custom_prompt"
         case outputPath = "output_path"
         case createdAt = "created_at"
+        case sharedAt = "shared_at"
     }
 }
 
