@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       return json({ error: "bad_request" }, 400); // custom must not carry a style
     }
     const trimmed = (custom_prompt as string).trim();
-    if (trimmed.length < 1 || trimmed.length > 500) {
+    if (trimmed.length < 1 || trimmed.length > 1000) {
       return json({ error: "bad_request" }, 400);
     }
     customPromptArg = trimmed;

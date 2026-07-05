@@ -39,7 +39,7 @@ struct CreateView: View {
         promptText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     private var promptValid: Bool {
-        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 500
+        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 1000
     }
 
     var body: some View {
@@ -224,9 +224,9 @@ struct CreateView: View {
                 .padding(Spacing.md)
                 .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
                 .disabled(isWorking)
-            Text("\(trimmedPrompt.count)/500")
+            Text("\(trimmedPrompt.count)/1000")
                 .font(.avoraCaption2)
-                .foregroundStyle(trimmedPrompt.count > 500 ? Color.avoraError : Color.avoraTextTertiary)
+                .foregroundStyle(trimmedPrompt.count > 1000 ? Color.avoraError : Color.avoraTextTertiary)
         }
     }
 
@@ -328,6 +328,7 @@ struct CreateView: View {
         } catch AvoraError.insufficientCredits {
             showCredits = true
         } catch {
+            print("😂 \(error)")
             errorText = "Couldn't start generation. Try again."
         }
     }

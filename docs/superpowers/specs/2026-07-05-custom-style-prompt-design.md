@@ -34,7 +34,7 @@ presets already have.
   referential integrity for preset jobs, introduces no magic-string coupling
   across layers, and fits the client code that **already** treats `styleId` as
   optional.
-- **Length cap:** 500 characters (server-enforced; client mirrors it).
+- **Length cap:** 1000 characters (server-enforced; client mirrors it).
 - **Re-use in v1:** Yes. `custom_prompt` is exposed to the client (owner-only via
   existing RLS — it is the user's own text, unlike preset `prompt_template`) so a
   custom creation offers "Create with this prompt".
@@ -156,7 +156,7 @@ and branches:
 - **Preset mode:** `style_id` must be a string; the style must exist and be
   `active` (existing check). `custom_prompt` must be absent.
 - **Custom mode:** `style_id` must be absent/null. Trim `custom_prompt`; require
-  `1 ≤ length ≤ 500` after trim, else `400 { error: "bad_request" }`. **Skip the
+  `1 ≤ length ≤ 1000` after trim, else `400 { error: "bad_request" }`. **Skip the
   style lookup entirely.** This is the server-side re-validation of the client's
   input checks — the client is never trusted.
 - Call the RPC with the mode's arguments:
@@ -237,11 +237,11 @@ struct CreateRoute: Hashable {
 - `private var isCustom: Bool { style.id == Style.custom.id }`.
 - `@State private var promptText: String` seeded from `route.customPrompt ?? ""`.
 - **When `isCustom`:** show a multiline "Describe your style…" `TextField`
-  (`.avoraGlass` styled) with a `promptText.count / 500` counter. There is no
+  (`.avoraGlass` styled) with a `promptText.count / 1000` counter. There is no
   sample placeholder for custom (the style has none) — the empty surface plus the
   field guides the user.
 - **Prompt validity:** `let trimmed = promptText.trimmingCharacters(in: .whitespacesAndNewlines)`,
-  valid = `!trimmed.isEmpty && trimmed.count <= 500`.
+  valid = `!trimmed.isEmpty && trimmed.count <= 1000`.
 - **Generate gating:** disabled unless photos are picked **and** (for custom) the
   prompt is valid: `sourceImages.isEmpty || isWorking || (isCustom && !promptValid)`.
 - **`generate()`:** for custom, call
@@ -318,7 +318,7 @@ photos, and generates again.
   per-quality cost and per-row refund still correct.
 - Edge function: a custom request (`{ custom_prompt: "watercolor sunset", input_paths, quality }`,
   no `style_id`) succeeds and produces rows with `style_id = null` and the trimmed
-  prompt. A blank or >500-char prompt returns `400`. A preset request is unaffected.
+  prompt. A blank or >1000-char prompt returns `400`. A preset request is unaffected.
 - Worker (mock off): a custom job wraps the text, calls `runEdit` with size `auto`,
   and completes; a `moderation_blocked` prompt fails and refunds.
 
@@ -326,7 +326,7 @@ photos, and generates again.
 - Build via XcodeBuild MCP (no compile errors).
 - Manually: the Custom tile appears first; tapping it opens Create with a text
   field. Generate stays disabled until a photo is picked **and** the prompt is
-  non-empty; the counter caps at 500.
+  non-empty; the counter caps at 1000.
 - End-to-end (mock on): generate a custom batch of 2 photos; both slots reveal.
 - Collection: the custom creation opens to "Create with this prompt", pre-filled
   with the original text; a preset creation still shows "Create with this style".

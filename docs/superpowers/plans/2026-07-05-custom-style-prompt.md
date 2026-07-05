@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **Data model:** `generations` is EITHER preset (`style_id` non-null, `custom_prompt` null) OR custom (`style_id` null, `custom_prompt` non-null) — never both, never neither. Enforced by CHECK `generations_style_xor_prompt`.
-- **Prompt length cap:** custom prompt is `1..=500` characters after trim. Enforced server-side (edge function) and mirrored client-side.
+- **Prompt length cap:** custom prompt is `1..=1000` characters after trim. Enforced server-side (edge function) and mirrored client-side.
 - **Prompt wrap (worker, verbatim):** `Restyle this photo: {user text}. Preserve the subject's likeness and pose. Do not add text or watermarks.`
 - **Custom size:** worker uses size `"auto"` for custom jobs (matches `styles.default_size` default).
 - **Moderation:** no custom banned-word list. Rely on OpenAI `moderation_blocked` → existing fail + auto-refund path.
@@ -261,7 +261,7 @@ git commit -m "feat: nullable style_id and custom_prompt column for custom gener
 
 **Interfaces:**
 - Consumes: `submit_generations_batch(..., p_custom_prompt)` from Task 1.
-- Produces: request contract — body is `{ input_paths, quality, style_id? , custom_prompt? }`. Custom mode = `custom_prompt` non-empty string (then `style_id` must be absent); preset mode = `style_id` string of an active style (then `custom_prompt` must be absent). Custom prompt validated `1..=500` chars after trim.
+- Produces: request contract — body is `{ input_paths, quality, style_id? , custom_prompt? }`. Custom mode = `custom_prompt` non-empty string (then `style_id` must be absent); preset mode = `style_id` string of an active style (then `custom_prompt` must be absent). Custom prompt validated `1..=1000` chars after trim.
 
 - [ ] **Step 1: Rewrite the validation + branch**
 
@@ -297,7 +297,7 @@ In `supabase/functions/submit-generation-batch/index.ts`, replace the body from 
       return json({ error: "bad_request" }, 400); // custom must not carry a style
     }
     const trimmed = (custom_prompt as string).trim();
-    if (trimmed.length < 1 || trimmed.length > 500) {
+    if (trimmed.length < 1 || trimmed.length > 1000) {
       return json({ error: "bad_request" }, 400);
     }
     customPromptArg = trimmed;
@@ -683,7 +683,7 @@ In `Avora/Views/Create/CreateView.swift`, add state seeded from the route and de
         promptText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     private var promptValid: Bool {
-        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 500
+        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 1000
     }
 ```
 
@@ -713,9 +713,9 @@ Add a prompt field to the `controls` stack, shown only when `isCustom` and resul
                 .padding(Spacing.md)
                 .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
                 .disabled(isWorking)
-            Text("\(trimmedPrompt.count)/500")
+            Text("\(trimmedPrompt.count)/1000")
                 .font(.avoraCaption2)
-                .foregroundStyle(trimmedPrompt.count > 500 ? Color.avoraError : Color.avoraTextTertiary)
+                .foregroundStyle(trimmedPrompt.count > 1000 ? Color.avoraError : Color.avoraTextTertiary)
         }
     }
 ```
@@ -756,7 +756,7 @@ Expected: build succeeds.
 
 Run the app (`build_run_sim`), open the Custom tile:
 - The prompt field appears; Generate is disabled until a photo is picked AND the prompt is non-empty.
-- The counter reads `n/500` and turns red past 500.
+- The counter reads `n/1000` and turns red past 1000.
 - With mock generation on (`AvoraConfig.isMockGenerationEnabled`), pick 2 photos, type a prompt, Generate → both slots reveal the mock result.
 - A preset style (e.g. Oil Painting) shows NO prompt field and generates as before.
 
@@ -827,7 +827,7 @@ git commit -m "feat: re-use a custom prompt from the collection detail"
 - Nullable `style_id` + `custom_prompt` + XOR check → Task 1. ✅
 - RPC gains `p_custom_prompt` → Task 1. ✅
 - RLS unchanged (owner reads `custom_prompt`) → no task needed; verified by `listGenerations` returning it (Task 5) under existing `generations_select_own`. ✅
-- Edge function preset/custom branch + 1..500 validation → Task 2. ✅
+- Edge function preset/custom branch + 1..1000 validation → Task 2. ✅
 - Worker wrap + size "auto" + skip style fetch → Task 3. ✅
 - `Style.custom`, `Generation.customPrompt`, `CreateRoute.customPrompt` → Task 4. ✅
 - `submitBatch` optional prompt + `listGenerations` select → Task 5. ✅
