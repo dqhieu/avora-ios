@@ -60,7 +60,15 @@ begin
 end;
 $$;
 
--- One-time backfill for existing accounts. Each call re-checks uniqueness
--- against rows already assigned in this same statement, so no collisions.
-update public.profiles set username = public.generate_username()
-  where username is null;
+-- One-time backfill for existing accounts. A single UPDATE would evaluate
+-- generate_username() against the statement-start snapshot, so two null rows
+-- could draw the same name and trip the unique index. Assign row-by-row so
+-- each generated name is visible to the next iteration's uniqueness check.
+do $$
+declare
+  r record;
+begin
+  for r in select id from public.profiles where username is null loop
+    update public.profiles set username = public.generate_username() where id = r.id;
+  end loop;
+end $$;
