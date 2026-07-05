@@ -8,12 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		47327BD02FF20DF00049310F /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BCF2FF20DF00049310F /* RevenueCat */; };
-		47327BD22FF20DF00049310F /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BD12FF20DF00049310F /* RevenueCatUI */; };
-		47327BD52FF20E2C0049310F /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BD42FF20E2C0049310F /* Auth */; };
-		47327BD72FF20E2C0049310F /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BD62FF20E2C0049310F /* Functions */; };
-		47327BD92FF20E2C0049310F /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BD82FF20E2C0049310F /* PostgREST */; };
-		47327BDB2FF20E2C0049310F /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDA2FF20E2C0049310F /* Realtime */; };
-		47327BDD2FF20E2C0049310F /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDC2FF20E2C0049310F /* Storage */; };
 		47327BDF2FF20E2C0049310F /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 47327BDE2FF20E2C0049310F /* Supabase */; };
 		47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 47729D1E2FF8E40700CD85CA /* GoogleSignIn */; };
 		47729E612FF902C300CD85CA /* VariableBlur in Frameworks */ = {isa = PBXBuildFile; productRef = 47729E602FF902C300CD85CA /* VariableBlur */; };
@@ -49,15 +43,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				47327BD22FF20DF00049310F /* RevenueCatUI in Frameworks */,
 				47327BD02FF20DF00049310F /* RevenueCat in Frameworks */,
-				47327BDD2FF20E2C0049310F /* Storage in Frameworks */,
-				47327BD72FF20E2C0049310F /* Functions in Frameworks */,
 				47327BDF2FF20E2C0049310F /* Supabase in Frameworks */,
-				47327BDB2FF20E2C0049310F /* Realtime in Frameworks */,
-				47327BD52FF20E2C0049310F /* Auth in Frameworks */,
 				47729E612FF902C300CD85CA /* VariableBlur in Frameworks */,
-				47327BD92FF20E2C0049310F /* PostgREST in Frameworks */,
 				47729D1F2FF8E40700CD85CA /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,12 +90,6 @@
 			name = Avora;
 			packageProductDependencies = (
 				47327BCF2FF20DF00049310F /* RevenueCat */,
-				47327BD12FF20DF00049310F /* RevenueCatUI */,
-				47327BD42FF20E2C0049310F /* Auth */,
-				47327BD62FF20E2C0049310F /* Functions */,
-				47327BD82FF20E2C0049310F /* PostgREST */,
-				47327BDA2FF20E2C0049310F /* Realtime */,
-				47327BDC2FF20E2C0049310F /* Storage */,
 				47327BDE2FF20E2C0049310F /* Supabase */,
 				47729D1E2FF8E40700CD85CA /* GoogleSignIn */,
 				47729E602FF902C300CD85CA /* VariableBlur */,
@@ -443,36 +425,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 47327BCE2FF20DF00049310F /* XCRemoteSwiftPackageReference "purchases-ios" */;
 			productName = RevenueCat;
-		};
-		47327BD12FF20DF00049310F /* RevenueCatUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BCE2FF20DF00049310F /* XCRemoteSwiftPackageReference "purchases-ios" */;
-			productName = RevenueCatUI;
-		};
-		47327BD42FF20E2C0049310F /* Auth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Auth;
-		};
-		47327BD62FF20E2C0049310F /* Functions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Functions;
-		};
-		47327BD82FF20E2C0049310F /* PostgREST */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = PostgREST;
-		};
-		47327BDA2FF20E2C0049310F /* Realtime */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Realtime;
-		};
-		47327BDC2FF20E2C0049310F /* Storage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 47327BD32FF20E2C0049310F /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Storage;
 		};
 		47327BDE2FF20E2C0049310F /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
