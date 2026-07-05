@@ -40,6 +40,7 @@ struct CommunityCard: View {
             HStack(spacing: 3) {
                 Image(systemName: item.likedByMe ? "heart.fill" : "heart")
                     .foregroundStyle(item.likedByMe ? Color.avoraAccent : Color.avoraTextSecondary)
+                    .font(.avoraCaption)
                 Text("\(item.likeCount)")
                     .font(.avoraSubheadline)
                     .foregroundStyle(Color.avoraTextSecondary)

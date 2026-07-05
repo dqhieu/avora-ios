@@ -81,11 +81,12 @@ struct CommunityDetailView: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Image(systemName: liked ? "heart.fill" : "heart")
-                    .foregroundStyle(liked ? Color.avoraAccent : Color.avoraTextSecondary)
                 Text("\(likeCount)")
                     .foregroundStyle(Color.avoraTextSecondary)
                     .contentTransition(.numericText())
+                Image(systemName: liked ? "heart.fill" : "heart")
+                    .animation(.default, value: liked)
+                    .contentTransition(.symbolEffect(.replace))
             }
             .font(.avoraHeadline)
         }
