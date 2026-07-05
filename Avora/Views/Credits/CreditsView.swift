@@ -94,8 +94,6 @@ struct CreditsView: View {
     private var balanceHeader: some View {
         Button { showBreakdown = true } label: {
             HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
-                Image(systemName: "centsign")
-                    .font(.largeTitle)
                 Text(app.profile?.totalCredits ?? 0, format: .number)
                     .font(.avoraHeroSans)
             }

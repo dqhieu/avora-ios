@@ -74,7 +74,7 @@ struct CreditTicketCard: View {
         } else {
             VStack(spacing: Spacing.xs) {
                 if pack.bonusPercent > 0 {
-                    Text("+\(pack.bonusPercent)% BONUS").font(.avoraCaption2).tracking(2)
+                    Text("\(pack.bonusPercent)% MORE").font(.avoraCaption2).tracking(2)
                 }
                 Text(pack.credits, format: .number)
                     .font(.avoraNumber.monospacedDigit())
@@ -112,12 +112,12 @@ struct CreditTicketCard: View {
     }
 
     private var footerText: String {
-        pack.bonusPercent > 0 ? "CREDITS · +\(pack.bonusPercent)% BONUS" : "CREDITS"
+        pack.bonusPercent > 0 ? "CREDITS · \(pack.bonusPercent)% MORE" : "CREDITS"
     }
 
     private var accessibilityText: String {
         var parts = ["Credit pack", "\(pack.credits) credits"]
-        if pack.bonusPercent > 0 { parts.append("\(pack.bonusPercent) percent bonus") }
+        if pack.bonusPercent > 0 { parts.append("\(pack.bonusPercent) percent more") }
         parts.append(pack.priceString)
         return parts.joined(separator: ", ")
     }
@@ -129,15 +129,15 @@ struct CreditTicketCard: View {
                 GridItem(.flexible(), spacing: Spacing.md)]
     return ScrollView {
         VStack(spacing: Spacing.md) {
-            CreditTicketCard(pack: .init(credits: 6000, priceString: "$39.99",
-                                         bonusPercent: 50, isFeatured: true), prominent: true) {}
+            CreditTicketCard(pack: .init(credits: 6000, priceString: "$27.99",
+                                         bonusPercent: 28, isFeatured: true), prominent: true) {}
             LazyVGrid(columns: cols, spacing: Spacing.md) {
-                CreditTicketCard(pack: .init(credits: 2500, priceString: "$19.99",
-                                             bonusPercent: 25, isFeatured: false), prominent: false) {}
-                CreditTicketCard(pack: .init(credits: 1000, priceString: "$9.99",
+                CreditTicketCard(pack: .init(credits: 2500, priceString: "$12.99",
+                                             bonusPercent: 15, isFeatured: false), prominent: false) {}
+                CreditTicketCard(pack: .init(credits: 1000, priceString: "$5.99",
                                              bonusPercent: 0, isFeatured: false), prominent: false) {}
-                CreditTicketCard(pack: .init(credits: 4000, priceString: "$29.99",
-                                             bonusPercent: 33, isFeatured: false), prominent: false) {}
+                CreditTicketCard(pack: .init(credits: 4000, priceString: "$19.99",
+                                             bonusPercent: 20, isFeatured: false), prominent: false) {}
                 CreditTicketCard(pack: .init(credits: 500, priceString: "kr 99,00",
                                              bonusPercent: 0, isFeatured: false), prominent: false) {}
             }
