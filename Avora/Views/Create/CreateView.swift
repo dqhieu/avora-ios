@@ -181,7 +181,7 @@ struct CreateView: View {
             let isWorkingPhase: Bool = {
                 if case .working = phase { return true } else { return false }
             }()
-            FocusReveal(
+            ScanReveal(
                 source: sourceImages[index],
                 resultPath: resultPath,
                 isGenerating: isSubmitting || isWorkingPhase
