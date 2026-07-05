@@ -10,8 +10,10 @@ Deno.serve(async (req) => {
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* leave empty */ }
-  const { style_id, input_paths, quality } = body;
-  if (typeof style_id !== "string" || !Array.isArray(input_paths)) {
+  const { style_id, custom_prompt, input_paths, quality } = body;
+
+  // input_paths + quality are validated the same way in both modes.
+  if (!Array.isArray(input_paths)) {
     return json({ error: "bad_request" }, 400);
   }
   // Cost is derived server-side from this value, so it must be validated here.
@@ -27,12 +29,34 @@ Deno.serve(async (req) => {
     return json({ error: "forbidden_path" }, 403);
   }
 
+  // Mode: custom when a non-empty custom_prompt is present, else preset.
+  const isCustom = typeof custom_prompt === "string" &&
+    custom_prompt.trim().length > 0;
+
+  let styleIdArg: string | null = null;
+  let customPromptArg: string | null = null;
+
   const db = serviceClient();
 
-  // style must exist and be active
-  const { data: style } = await db.from("styles")
-    .select("id, active").eq("id", style_id).single();
-  if (!style || !style.active) return json({ error: "unknown_style" }, 400);
+  if (isCustom) {
+    if (typeof style_id === "string") {
+      return json({ error: "bad_request" }, 400); // custom must not carry a style
+    }
+    const trimmed = (custom_prompt as string).trim();
+    if (trimmed.length < 1 || trimmed.length > 500) {
+      return json({ error: "bad_request" }, 400);
+    }
+    customPromptArg = trimmed;
+  } else {
+    if (typeof style_id !== "string") {
+      return json({ error: "bad_request" }, 400);
+    }
+    // style must exist and be active
+    const { data: style } = await db.from("styles")
+      .select("id, active").eq("id", style_id).single();
+    if (!style || !style.active) return json({ error: "unknown_style" }, 400);
+    styleIdArg = style_id;
+  }
 
   // validate each input file (format/size) via Storage list + metadata
   for (const path of input_paths as string[]) {
@@ -54,9 +78,10 @@ Deno.serve(async (req) => {
   await db.rpc("lazy_weekly_reset", { p_uid: uid });
   const { data: jobIds, error: rpcErr } = await db.rpc("submit_generations_batch", {
     p_uid: uid,
-    p_style_id: style_id,
+    p_style_id: styleIdArg,
     p_input_paths: input_paths,
     p_quality: quality,
+    p_custom_prompt: customPromptArg,
   });
   if (rpcErr) {
     if (rpcErr.code === "P0001" && rpcErr.message.includes("insufficient_credits"))
