@@ -5,6 +5,8 @@ struct RootTabView: View {
         TabView {
             StylesTab()
                 .tabItem { Label("Create", systemImage: "wand.and.stars") }
+            CommunityTab()
+                .tabItem { Label("Community", systemImage: "person.2") }
             CollectionTab()
                 .tabItem { Label("Collection", systemImage: "square.grid.2x2") }
         }
@@ -19,6 +21,14 @@ private struct StylesTab: View {
     @State private var path = NavigationPath()
     var body: some View {
         NavigationStack(path: $path) { StylesGridView() }
+            .toolbar(path.isEmpty ? .visible : .hidden, for: .tabBar)
+    }
+}
+
+private struct CommunityTab: View {
+    @State private var path = NavigationPath()
+    var body: some View {
+        NavigationStack(path: $path) { CommunityView() }
             .toolbar(path.isEmpty ? .visible : .hidden, for: .tabBar)
     }
 }
