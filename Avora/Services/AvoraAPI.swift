@@ -59,9 +59,9 @@ struct AvoraAPI {
         if AvoraConfig.isMockGenerationEnabled { return "mock://input" }
         #endif
         let uid = try await currentUserId()
-        let path = "\(uid.uuidString.lowercased())/\(UUID().uuidString).png"
+        let path = "\(uid.uuidString.lowercased())/\(UUID().uuidString).jpg"
         try await db.storage.from("inputs")
-            .upload(path, data: data, options: FileOptions(contentType: "image/png"))
+            .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
         return path
     }
 

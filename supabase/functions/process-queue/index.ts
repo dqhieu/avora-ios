@@ -29,10 +29,12 @@ Deno.serve(async () => {
   for (const m of msgs) {
     const jobId = m.message.job_id as string;
     const msgId = m.msg_id as number;
+    let inputPath: string | undefined;
     try {
       const { data: gen } = await db.from("generations")
         .select("id,user_id,style_id,custom_prompt,input_path,quality,status").eq("id", jobId).single();
       if (!gen || gen.status !== "pending") { await archive(db, msgId); continue; }
+      inputPath = gen.input_path;
 
       // Custom jobs carry their own words (no preset row); preset jobs load the
       // curated template. size "auto" matches styles.default_size for custom.
@@ -72,6 +74,7 @@ Deno.serve(async () => {
 
       await bumpSpend(db, today, result.inputTokens + result.outputTokens);
       await archive(db, msgId);
+      await removeInput(db, inputPath);
       processed++;
     } catch (e) {
       if (e instanceof OpenAIError && e.retryable) {
@@ -81,6 +84,7 @@ Deno.serve(async () => {
           await db.from("generations").update({ error_code: e.code }).eq("id", jobId);
           await db.rpc("refund_credit", { p_generation_id: jobId });
           await archive(db, msgId);
+          await removeInput(db, inputPath);
         }
         continue;
       }
@@ -89,6 +93,7 @@ Deno.serve(async () => {
       await db.from("generations").update({ error_code: code }).eq("id", jobId);
       await db.rpc("refund_credit", { p_generation_id: jobId });
       await archive(db, msgId);
+      await removeInput(db, inputPath);
     }
   }
   return json({ processed });
@@ -111,6 +116,13 @@ async function toJpeg(pngBytes: Uint8Array): Promise<Uint8Array> {
 
 async function archive(db: ReturnType<typeof serviceClient>, msgId: number) {
   await db.rpc("pgmq_archive", { queue_name: "generations", msg_id: msgId });
+}
+
+// Drop the input image once the job is terminal — it's never read again. Best-effort:
+// a storage error here must not throw, or it would refund/re-queue a finished job.
+async function removeInput(db: ReturnType<typeof serviceClient>, path: string | undefined) {
+  if (!path) return;
+  try { await db.storage.from("inputs").remove([path]); } catch { /* ignore */ }
 }
 
 async function bumpSpend(db: ReturnType<typeof serviceClient>, day: string, tokens: number) {
