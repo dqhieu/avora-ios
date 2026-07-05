@@ -31,8 +31,10 @@ struct ScanReveal: View {
                 } else {
                     cardImage(source)
                     if isGenerating {
+                        let fit = fittedImageRect(in: geo.size)
                         scanLine
-                            .offset(y: h * scanY - lineThickness / 2)
+                            .frame(width: fit.width)
+                            .offset(y: fit.minY + fit.height * scanY - lineThickness / 2)
                     }
                 }
             }
@@ -52,7 +54,8 @@ struct ScanReveal: View {
             .clipped()
     }
 
-    // Thin accent line with a soft blurred glow copy behind it.
+    // Thin accent line with a soft blurred glow copy behind it. Width is set by
+    // the caller to match the fitted image.
     private var scanLine: some View {
         ZStack {
             Capsule()
@@ -63,7 +66,23 @@ struct ScanReveal: View {
                 .fill(Color.avoraAccent)
                 .frame(height: lineThickness)
         }
-        .frame(maxWidth: .infinity)
+    }
+
+    // The rect the aspect-fit source image actually occupies inside the card,
+    // so the scan line spans and travels only over the photo, not the letterbox.
+    private func fittedImageRect(in container: CGSize) -> (minY: CGFloat, height: CGFloat, width: CGFloat) {
+        let imageAspect = source.size.width / max(source.size.height, 1)
+        let containerAspect = container.width / max(container.height, 1)
+        let width: CGFloat
+        let height: CGFloat
+        if imageAspect > containerAspect {
+            width = container.width
+            height = container.width / imageAspect
+        } else {
+            height = container.height
+            width = container.height * imageAspect
+        }
+        return (minY: (container.height - height) / 2, height: height, width: width)
     }
 
     // Loop the line down→up→down while the job runs.
