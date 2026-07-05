@@ -13,10 +13,12 @@ struct CreateView: View {
     @State private var isSubmitting = false
     @State private var isPhotosExpanded = false
     @State private var quality: GenerationQuality = .default
+    @State private var promptText: String
 
     init(route: CreateRoute) {
         self.style = route.style
         self.placeholder = route.placeholder
+        _promptText = State(initialValue: route.customPrompt ?? "")
     }
 
     /// Image shown before the user picks photos: an explicit one from the route
@@ -31,9 +33,22 @@ struct CreateView: View {
         isSubmitting || (!poller.items.isEmpty && !poller.allTerminal)
     }
 
+    private var isCustom: Bool { style.id == Style.custom.id }
+
+    private var trimmedPrompt: String {
+        promptText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    private var promptValid: Bool {
+        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 500
+    }
+
     var body: some View {
         VStack(spacing: Spacing.lg) {
             photoArea
+            if isCustom && !hasResults {
+                promptField
+                    .padding(.horizontal, Spacing.lg)
+            }
             controls
                 .padding(.horizontal, Spacing.lg)
         }
@@ -201,6 +216,20 @@ struct CreateView: View {
         .disabled(isWorking)
     }
 
+    private var promptField: some View {
+        VStack(alignment: .trailing, spacing: Spacing.xs) {
+            TextField("Describe your style…", text: $promptText, axis: .vertical)
+                .lineLimit(2...4)
+                .font(.avoraBody)
+                .padding(Spacing.md)
+                .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+                .disabled(isWorking)
+            Text("\(trimmedPrompt.count)/500")
+                .font(.avoraCaption2)
+                .foregroundStyle(trimmedPrompt.count > 500 ? Color.avoraError : Color.avoraTextTertiary)
+        }
+    }
+
     @ViewBuilder private var controls: some View {
         if poller.allTerminal {
             HStack {
@@ -238,7 +267,7 @@ struct CreateView: View {
                         }
                     }
                 }
-                .disabled(sourceImages.isEmpty || isWorking)
+                .disabled(sourceImages.isEmpty || isWorking || (isCustom && !promptValid))
             }
         }
         if let errorText {
@@ -286,8 +315,15 @@ struct CreateView: View {
                 for try await (i, path) in group { byIndex[i] = path }
                 return payloads.indices.map { byIndex[$0]! }
             }
-            let jobIds = try await AvoraAPI.shared.submitBatch(
-                styleId: style.id, inputPaths: paths, quality: quality.backend)
+            let jobIds: [UUID]
+            if isCustom {
+                jobIds = try await AvoraAPI.shared.submitBatch(
+                    styleId: nil, inputPaths: paths, quality: quality.backend,
+                    customPrompt: trimmedPrompt)
+            } else {
+                jobIds = try await AvoraAPI.shared.submitBatch(
+                    styleId: style.id, inputPaths: paths, quality: quality.backend)
+            }
             poller.start(jobIds: jobIds, poll: { try await AvoraAPI.shared.poll(jobId: $0) })
         } catch AvoraError.insufficientCredits {
             showCredits = true
