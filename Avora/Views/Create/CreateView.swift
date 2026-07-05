@@ -40,7 +40,7 @@ struct CreateView: View {
         promptText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     private var promptValid: Bool {
-        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 1000
+        !trimmedPrompt.isEmpty && trimmedPrompt.count <= 2000
     }
 
     var body: some View {

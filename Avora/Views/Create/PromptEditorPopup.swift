@@ -18,7 +18,7 @@ struct PromptEditorPopup: View {
     }
 
     private var trimmed: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var valid: Bool { !trimmed.isEmpty && trimmed.count <= 1000 }
+    private var valid: Bool { !trimmed.isEmpty && trimmed.count <= 2000 }
 
     var body: some View {
         NavigationStack {
@@ -31,9 +31,9 @@ struct PromptEditorPopup: View {
                     .padding(Spacing.md)
                     .avoraGlass(in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
 
-                Text("\(trimmed.count)/1000")
+                Text("\(trimmed.count)/2000")
                     .font(.avoraCaption2)
-                    .foregroundStyle(trimmed.count > 1000 ? Color.avoraError : Color.avoraTextTertiary)
+                    .foregroundStyle(trimmed.count > 2000 ? Color.avoraError : Color.avoraTextTertiary)
                     .padding(.trailing, Spacing.xs)
 
                 Spacer()
