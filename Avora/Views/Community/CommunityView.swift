@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct CommunityView: View {
-    @Environment(AppState.self) private var app
     @State private var items: [CommunityItem] = []
     @State private var sort: CommunitySort = .latest
     @State private var nextCursor: Date?      // latest

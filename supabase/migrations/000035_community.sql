@@ -20,17 +20,14 @@ create index generations_like_count_idx
   on public.generations (like_count desc, shared_at desc) where shared_at is not null;
 create index likes_generation_idx on public.likes (generation_id);
 
--- likes: a user reads and manages only their own like rows. (The like/unlike
--- RPCs run as definer and keep like_count consistent; these policies let the
--- client read its own liked state directly if ever needed and enforce ownership.)
+-- likes: the client's only direct access to this table is reading its own
+-- rows. All like/unlike mutations go through the like_creation/unlike_creation
+-- definer RPCs, which keep like_count consistent; there are no client write
+-- policies so direct inserts/deletes can't drift the counter.
 alter table public.likes enable row level security;
 
 create policy likes_select_own on public.likes
   for select to authenticated using (user_id = auth.uid());
-create policy likes_insert_own on public.likes
-  for insert to authenticated with check (user_id = auth.uid());
-create policy likes_delete_own on public.likes
-  for delete to authenticated using (user_id = auth.uid());
 
 -- Image visibility: the outputs bucket is private (owner-only reads via
 -- outputs_read_own). This second policy lets ANY authenticated user mint a
