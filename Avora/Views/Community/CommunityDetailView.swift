@@ -9,6 +9,7 @@ struct CommunityDetailView: View {
     @State private var style: Style?
     @State private var liked: Bool
     @State private var likeCount: Int
+    @State private var more: [CommunityItem] = []
 
     init(item: CommunityItem) {
         self.item = item
@@ -22,27 +23,30 @@ struct CommunityDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: Spacing.lg) {
-            Spacer(minLength: 4)
-            if let path = item.outputPath {
-                RemoteImage(path: path, contentMode: .fit)
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                if let path = item.outputPath {
+                    RemoteImage(path: path, contentMode: .fit)
+                }
+                HStack {
+                    Text(item.username.map { "@\($0)" } ?? "@unknown")
+                        .font(.avoraHeadline)
+                        .foregroundStyle(Color.avoraTextSecondary)
+                    Spacer()
+                    likeButton
+                }
+                .padding(.horizontal, Spacing.lg)
+                createButton
+                moreSection
             }
-            HStack {
-                Text(item.username.map { "@\($0)" } ?? "@unknown")
-                    .font(.avoraHeadline)
-                    .foregroundStyle(Color.avoraTextSecondary)
-                Spacer()
-                likeButton
-            }
-            .padding(.horizontal, Spacing.lg)
-            Spacer(minLength: 4)
-            createButton
+            .padding(.vertical, Spacing.lg)
         }
-        .padding(.vertical, Spacing.lg)
-        .frame(maxHeight: .infinity)
         .navigationTitle(style?.name ?? "Creation")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await resolveStyle() }
+        .task {
+            await resolveStyle()
+            await loadMore()
+        }
     }
 
     @ViewBuilder
@@ -96,6 +100,44 @@ struct CommunityDetailView: View {
             .font(.avoraHeadline)
         }
         .buttonStyle(.plain)
+    }
+
+    private let moreColumns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
+
+    @ViewBuilder
+    private var moreSection: some View {
+        if !more.isEmpty, let username = item.username {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("More from @\(username)")
+                    .font(.avoraHeadline)
+                    .foregroundStyle(Color.avoraTextSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                LazyVGrid(columns: moreColumns, spacing: Spacing.sm) {
+                    ForEach(more) { other in
+                        NavigationLink(value: other) { moreThumbnail(other) }
+                            .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+        }
+    }
+
+    private func moreThumbnail(_ other: CommunityItem) -> some View {
+        RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+            .fill(Color.avoraSurface)
+            .aspectRatio(1, contentMode: .fit)
+            .overlay {
+                if let path = other.outputPath {
+                    RemoteImage(path: path, contentMode: .fill)
+                }
+            }
+            .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
+    }
+
+    private func loadMore() async {
+        guard let username = item.username else { return }
+        more = (try? await AvoraAPI.shared.communityByUser(username, excluding: item.id)) ?? []
     }
 
     private func resolveStyle() async {
