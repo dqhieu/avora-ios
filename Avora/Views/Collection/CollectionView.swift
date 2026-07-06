@@ -160,7 +160,7 @@ private struct CreationDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { Task { await save() } } label: {
-                    Image(systemName: saved ? "checkmark" : "square.and.arrow.down")
+                    ThiingIcon(name: "ActionSave", size: 22, active: !saved)
                 }
                 .disabled(saved)
             }
@@ -174,7 +174,7 @@ private struct CreationDetailView: View {
                         Task { await setShared(true) }
                     }
                 } label: {
-                    Image(systemName: shared ? "person.2.fill" : "person.2")
+                    ThiingIcon(name: "ActionShare", size: 22, active: shared)
                 }
                 .disabled(sharing)
             }

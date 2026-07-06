@@ -38,7 +38,7 @@ struct StylesGridView: View {
 
                 if loadError && app.styles.isEmpty {
                     ContentUnavailableView {
-                        Label("Couldn’t load styles", systemImage: "exclamationmark.triangle")
+                        Label("Couldn’t load styles", image: "StateError")
                     } description: {
                         Text("Check your connection and try again.")
                     } actions: {

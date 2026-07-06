@@ -1,15 +1,34 @@
 import SwiftUI
+import UIKit
 
 struct RootTabView: View {
     var body: some View {
         TabView {
             StylesTab()
-                .tabItem { Label("Create", systemImage: "wand.and.stars") }
+                .tabItem { Label { Text("Create") } icon: { Image(uiImage: TabBarIcon.create) } }
             CommunityTab()
-                .tabItem { Label("Community", systemImage: "person.2") }
+                .tabItem { Label { Text("Community") } icon: { Image(uiImage: TabBarIcon.community) } }
             CollectionTab()
-                .tabItem { Label("Collection", systemImage: "square.grid.2x2") }
+                .tabItem { Label { Text("Collection") } icon: { Image(uiImage: TabBarIcon.collection) } }
         }
+    }
+}
+
+/// The full-color 3D tab icons ship at 256px so they stay crisp on other
+/// surfaces. Native `.tabItem` renders an asset at its logical point size, so a
+/// 256px source would show at 256pt. These downscale the source to tab-bar size
+/// once and render `.alwaysOriginal` to preserve color.
+private enum TabBarIcon {
+    static let create = make("TabCreate")
+    static let community = make("TabCommunity")
+    static let collection = make("TabCollection")
+
+    private static func make(_ name: String, pointSize: CGFloat = 28) -> UIImage {
+        let base = UIImage(named: name) ?? UIImage()
+        let size = CGSize(width: pointSize, height: pointSize)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            base.draw(in: CGRect(origin: .zero, size: size))
+        }.withRenderingMode(.alwaysOriginal)
     }
 }
 

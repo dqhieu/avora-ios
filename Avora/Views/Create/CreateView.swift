@@ -98,12 +98,11 @@ struct CreateView: View {
                         RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                             .fill(Color.avoraSurface)
                         VStack(spacing: Spacing.sm) {
-                            Image(systemName: "photo.badge.plus")
-                                .font(.system(size: 44))
+                            ThiingIcon(name: "StateEmpty", size: 64)
                             Text("Tap to add a photo")
                                 .font(.avoraFootnote)
+                                .foregroundStyle(Color.avoraTextTertiary)
                         }
-                        .foregroundStyle(Color.avoraTextTertiary)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -84,9 +84,8 @@ struct CommunityDetailView: View {
                 Text("\(likeCount)")
                     .foregroundStyle(Color.avoraTextSecondary)
                     .contentTransition(.numericText())
-                Image(systemName: liked ? "heart.fill" : "heart")
+                ThiingIcon(name: "ActionLike", size: 20, active: liked)
                     .animation(.default, value: liked)
-                    .contentTransition(.symbolEffect(.replace))
             }
             .font(.avoraHeadline)
         }

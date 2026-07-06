@@ -128,7 +128,7 @@ struct CreditsView: View {
 
     private var retry: some View {
         ContentUnavailableView {
-            Label("Couldn’t load packs", systemImage: "exclamationmark.triangle")
+            Label("Couldn’t load packs", image: "StateError")
         } actions: {
             Button("Retry") { Task { await load() } }
         }

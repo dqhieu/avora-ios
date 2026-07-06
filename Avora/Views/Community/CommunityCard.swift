@@ -38,9 +38,7 @@ struct CommunityCard: View {
     private var likeButton: some View {
         Button(action: onToggleLike) {
             HStack(spacing: 3) {
-                Image(systemName: item.likedByMe ? "heart.fill" : "heart")
-                    .foregroundStyle(item.likedByMe ? Color.avoraAccent : Color.avoraTextSecondary)
-                    .font(.avoraCaption)
+                ThiingIcon(name: "ActionLike", size: 17, active: item.likedByMe)
                 Text("\(item.likeCount)")
                     .font(.avoraSubheadline)
                     .foregroundStyle(Color.avoraTextSecondary)
