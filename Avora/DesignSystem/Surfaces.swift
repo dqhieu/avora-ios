@@ -31,6 +31,7 @@ struct AvoraPrimaryButtonStyle: ButtonStyle {
             .font(.avoraButton)
             .foregroundStyle(Color.avoraOnAccent)
             .frame(maxWidth: .infinity, minHeight: 56)
+            .contentShape(.capsule)
             .opacity(configuration.isPressed ? 0.85 : 1)
 
         if #available(iOS 26.0, *) {
@@ -54,6 +55,7 @@ struct AvoraCustomButtonStyle: ButtonStyle {
             .padding(.vertical, 8)
             .padding(.horizontal)
             .foregroundStyle(Color.avoraOnAccent)
+            .contentShape(.capsule)
             .opacity(configuration.isPressed ? 0.85 : 1)
 
         if #available(iOS 26.0, *) {
