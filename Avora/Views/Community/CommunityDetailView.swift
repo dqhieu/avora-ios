@@ -49,14 +49,20 @@ struct CommunityDetailView: View {
     private var createButton: some View {
         if let style {
             NavigationLink(value: CreateRoute(style: style, placeholder: placeholder)) {
-                Label("Create with this style", systemImage: "wand.and.stars")
+                HStack(spacing: Spacing.xs) {
+                    ThiingIcon(name: "ActionGenerate", size: 22)
+                    Text("Create with this style")
+                }
             }
             .buttonStyle(AvoraPrimaryButtonStyle())
             .padding(.horizontal, Spacing.lg)
         } else if let prompt = item.customPrompt {
             NavigationLink(value: CreateRoute(style: .custom, placeholder: placeholder,
                                               customPrompt: prompt)) {
-                Label("Create with this style", systemImage: "wand.and.stars")
+                HStack(spacing: Spacing.xs) {
+                    ThiingIcon(name: "ActionGenerate", size: 22)
+                    Text("Create with this style")
+                }
             }
             .buttonStyle(AvoraPrimaryButtonStyle())
             .padding(.horizontal, Spacing.lg)

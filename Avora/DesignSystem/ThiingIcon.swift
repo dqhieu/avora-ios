@@ -22,8 +22,8 @@ struct ThiingIcon: View {
     HStack(spacing: Spacing.lg) {
         ThiingIcon(name: "ActionLike", size: 32)
         ThiingIcon(name: "ActionLike", size: 32, active: false)
-        ThiingIcon(name: "ActionSave", size: 32)
-        ThiingIcon(name: "ActionShare", size: 32)
+        ThiingIcon(name: "ActionGenerate", size: 32)
+        ThiingIcon(name: "ActionCredits", size: 32)
     }
     .padding(Spacing.xl)
     .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct CommunityView: View {
+    @Environment(AppState.self) private var app
     @State private var items: [CommunityItem] = []
     @State private var sort: CommunitySort = .latest
     @State private var nextCursor: Date?      // latest
@@ -8,6 +9,8 @@ struct CommunityView: View {
     @State private var loading = false
     @State private var reloadToken = 0
     @State private var hasLoaded = false
+    @State private var showSettings = false
+    @State private var showCredits = false
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
     var body: some View {
@@ -29,15 +32,29 @@ struct CommunityView: View {
         .navigationDestination(for: CommunityItem.self) { CommunityDetailView(item: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Picker("Sort", selection: $sort) {
                         ForEach(CommunitySort.allCases, id: \.self) { Text($0.label).tag($0) }
                     }
                 } label: {
-                    Label("Sort", systemImage: "arrow.up.arrow.down")
+                    ThiingIcon(name: sort == .mostLiked ? "ActionLike" : "ActionLatest", size: 32)
+                        .accessibilityLabel("Sort")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
+                    .padding(.trailing, -4)
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack { SettingsView().environment(app) }
+        }
+        .sheet(isPresented: $showCredits) {
+            NavigationStack { CreditsView().environment(app) }
         }
         .overlay {
             if items.isEmpty && hasLoaded {
