@@ -64,6 +64,10 @@ struct CreateView: View {
                     }
                     .disabled(isWorking)
                 }
+            } else if poller.allTerminal {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { reset() } label: { ThiingIcon(name: "ActionRegenerate", size: 32) }
+                }
             }
         }
         .sheet(isPresented: $showPromptEditor) {
@@ -258,17 +262,11 @@ struct CreateView: View {
 
     @ViewBuilder private var controls: some View {
         if poller.allTerminal {
-            HStack {
-                Button { Task { await saveAll() } } label: {
-                    Label("Save all", systemImage: "square.and.arrow.down")
+            AvoraPrimaryButton { Task { await saveAll() } } label: {
+                HStack(spacing: Spacing.xs) {
+                    ThiingIcon(name: "ActionSave", size: 28)
+                    Text("Save to Photos")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.avoraAccent)
-                Button { reset() } label: {
-                    Label("Generate again", systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.bordered)
-                .tint(Color.avoraAccent)
             }
         } else {
             HStack(spacing: Spacing.md) {
