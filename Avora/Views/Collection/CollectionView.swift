@@ -122,7 +122,6 @@ private struct CreationDetailView: View {
     }
     @Environment(AppState.self) private var app
     @State private var style: Style?
-    @State private var saved = false
     @State private var shared: Bool
     @State private var showShareConfirm = false
     @State private var sharing = false
@@ -166,9 +165,8 @@ private struct CreationDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { Task { await save() } } label: {
-                    ThiingIcon(name: "ActionSave", size: 28, active: !saved)
+                    ThiingIcon(name: "ActionSave", size: 28)
                 }
-                .disabled(saved)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -206,7 +204,7 @@ private struct CreationDetailView: View {
         guard let path = generation.outputPath,
               let img = try? await ImageStore.shared.image(for: path) else { return }
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
-        saved = true
+        ToastWindowManager.shared.show(title: "Saved to Photos")
     }
 
     private func setShared(_ newValue: Bool) async {
@@ -220,6 +218,9 @@ private struct CreationDetailView: View {
             }
             shared = newValue
             SnapshotStore.clearCommunity()   // force the feed to refetch on next view
+            ToastWindowManager.shared.show(
+                title: newValue ? "Shared to Community" : "Removed from Community"
+            )
         } catch { }
     }
 }

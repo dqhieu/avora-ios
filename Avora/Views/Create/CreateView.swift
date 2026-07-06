@@ -15,6 +15,7 @@ struct CreateView: View {
     @State private var quality: GenerationQuality = .default
     @State private var promptText: String
     @State private var showPromptEditor = false
+    @State private var saved = false
 
     init(route: CreateRoute) {
         self.style = route.style
@@ -264,10 +265,11 @@ struct CreateView: View {
         if poller.allTerminal {
             AvoraPrimaryButton { Task { await saveAll() } } label: {
                 HStack(spacing: Spacing.xs) {
-                    ThiingIcon(name: "ActionSave", size: 28)
-                    Text("Save to Photos")
+                    ThiingIcon(name: saved ? "ActionSaved" : "ActionSave", size: saved ? 32 : 28)
+                    Text(saved ? "Saved" : "Save to Photos")
                 }
             }
+            .disabled(saved)
         } else {
             HStack(spacing: Spacing.md) {
                 qualityMenu
@@ -325,6 +327,7 @@ struct CreateView: View {
         isSubmitting = true
         defer { isSubmitting = false }
         errorText = nil
+        saved = false
         do {
             // Upload all inputs in parallel; if any fails, abort before submitting
             // so billing stays all-or-nothing (nothing is charged).
@@ -366,10 +369,18 @@ struct CreateView: View {
     }
 
     private func saveAll() async {
+        var count = 0
         for item in poller.items {
             if case .done(let path) = item.phase {
                 await saveOne(path)
+                count += 1
             }
+        }
+        if count > 0 {
+            saved = true
+            ToastWindowManager.shared.show(
+                title: count == 1 ? "Saved to Photos" : "Saved \(count) to Photos"
+            )
         }
     }
 
@@ -380,5 +391,6 @@ struct CreateView: View {
         sourceImages = []
         isPhotosExpanded = false
         errorText = nil
+        saved = false
     }
 }
