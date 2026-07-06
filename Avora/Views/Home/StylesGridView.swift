@@ -54,7 +54,7 @@ struct StylesGridView: View {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
             }
         }
         .sheet(isPresented: $showSettings) {

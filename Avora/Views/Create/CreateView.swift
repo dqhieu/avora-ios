@@ -281,7 +281,10 @@ struct CreateView: View {
                         }
                     } else {
                         VStack(spacing: Spacing.xs) {
-                            Label("Generate", systemImage: "wand.and.stars")
+                            HStack(spacing: Spacing.xs) {
+                                ThiingIcon(name: "ActionGenerate", size: 28)
+                                Text("Generate")
+                            }
                             if !sourceImages.isEmpty {
                                 Text("\(sourceImages.count * app.config.cost(for: quality)) credits")
                                   .font(.avoraCaption)

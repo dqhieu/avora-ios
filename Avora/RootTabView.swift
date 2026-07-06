@@ -23,7 +23,7 @@ private enum TabBarIcon {
     static let community = make("TabCommunity")
     static let collection = make("TabCollection")
 
-    private static func make(_ name: String, pointSize: CGFloat = 28) -> UIImage {
+    private static func make(_ name: String, pointSize: CGFloat = 32) -> UIImage {
         let base = UIImage(named: name) ?? UIImage()
         let size = CGSize(width: pointSize, height: pointSize)
         return UIGraphicsImageRenderer(size: size).image { _ in

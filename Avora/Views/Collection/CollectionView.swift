@@ -33,7 +33,7 @@ struct CollectionView: View {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -160,7 +160,7 @@ private struct CreationDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { Task { await save() } } label: {
-                    ThiingIcon(name: "ActionSave", size: 22, active: !saved)
+                    ThiingIcon(name: "ActionSave", size: 28, active: !saved)
                 }
                 .disabled(saved)
             }
@@ -174,7 +174,7 @@ private struct CreationDetailView: View {
                         Task { await setShared(true) }
                     }
                 } label: {
-                    ThiingIcon(name: "ActionShare", size: 22, active: shared)
+                    ThiingIcon(name: "ActionShare", size: 28, active: shared)
                 }
                 .disabled(sharing)
             }

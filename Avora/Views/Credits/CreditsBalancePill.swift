@@ -8,7 +8,7 @@ struct CreditsBalancePill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Spacing.xs) {
-                Image(systemName: "centsign")
+                ThiingIcon(name: "ActionCredits", size: 28)
               if credits == -1 {
                 ProgressView()
               } else {
