@@ -54,16 +54,16 @@ struct ScanReveal: View {
             .clipped()
     }
 
-    // Thin accent line with a soft blurred glow copy behind it. Width is set by
+    // Thin white line with a soft blurred glow copy behind it. Width is set by
     // the caller to match the fitted image.
     private var scanLine: some View {
         ZStack {
             Capsule()
-                .fill(Color.avoraAccent)
+                .fill(Color.white)
                 .frame(height: lineThickness)
                 .blur(radius: glowBlur)
             Capsule()
-                .fill(Color.avoraAccent)
+                .fill(Color.white)
                 .frame(height: lineThickness)
         }
     }
