@@ -2,15 +2,20 @@ import SwiftUI
 import UIKit
 
 struct RootTabView: View {
+    @State private var selection = 0
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             StylesTab()
                 .tabItem { Label { Text("Create") } icon: { Image(uiImage: TabBarIcon.create) } }
+                .tag(0)
             CommunityTab()
                 .tabItem { Label { Text("Community") } icon: { Image(uiImage: TabBarIcon.community) } }
+                .tag(1)
             CollectionTab()
                 .tabItem { Label { Text("Collection") } icon: { Image(uiImage: TabBarIcon.collection) } }
+                .tag(2)
         }
+        .onChange(of: selection) { Haptics.selection() }
     }
 }
 

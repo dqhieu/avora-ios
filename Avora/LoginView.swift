@@ -109,6 +109,7 @@ struct LoginView: View {
               let window = scene.windows.first(where: { $0.isKeyWindow })
         else { return }
 
+        Haptics.impact()
         loadingProvider = .apple
         Task {
             defer { loadingProvider = nil }
@@ -124,6 +125,7 @@ struct LoginView: View {
 
     private func logInWithGoogle() {
         guard let root = rootViewController() else { return }
+        Haptics.impact()
         loadingProvider = .google
         Task {
             defer { loadingProvider = nil }

@@ -17,6 +17,7 @@ struct StylesGridView: View {
                                 StyleCard(style: style)
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                         }
                     }
                     .padding()
@@ -32,6 +33,7 @@ struct StylesGridView: View {
                         }
                         .contentShape(.rect)
                         .buttonStyle(AvoraCustomButtonStyle())
+                        .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                     }
                     .padding(.horizontal, Spacing.xl)
                 }
@@ -42,7 +44,7 @@ struct StylesGridView: View {
                     } description: {
                         Text("Check your connection and try again.")
                     } actions: {
-                        Button("Retry") { Task { await load(force: true) } }
+                        Button("Retry") { Haptics.tap(); Task { await load(force: true) } }
                     }
                     .padding(.top, 40)
                 }
@@ -51,10 +53,10 @@ struct StylesGridView: View {
         .navigationTitle("Avora")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { Haptics.tap(); showCredits = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
+                Button { Haptics.tap(); showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
             }
         }
         .sheet(isPresented: $showSettings) {

@@ -15,6 +15,7 @@ struct SettingsView: View {
             Section("Account") {
                 if let username = app.profile?.username {
                     Button {
+                        Haptics.tap()
                         editingUsername = true
                     } label: {
                         LabeledContent("Username", value: username)
@@ -27,22 +28,26 @@ struct SettingsView: View {
             }
             Section {
                 Button("Restore Purchases") {
+                    Haptics.tap()
                     Task {
                         try? await AvoraPurchases.restore()
                         await app.refreshProfile()
                     }
                 }
                 Button("Sign Out") {
+                    Haptics.tap()
                     Task { await app.signOut() }
                 }
             }
             #if DEBUG
             Section("Developer") {
                 Toggle("Mock generation", isOn: $mockGeneration)
+                    .onChange(of: mockGeneration) { Haptics.selection() }
             }
             #endif
             Section {
                 Button("Delete Account", role: .destructive) {
+                    Haptics.warning()
                     confirmDelete = true
                 }
             } footer: {
@@ -52,7 +57,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                Button("Done") { Haptics.tap(); dismiss() }
             }
         }
         .sheet(isPresented: $editingUsername) {
@@ -77,6 +82,7 @@ struct SettingsView: View {
                         try await AvoraAPI.shared.deleteAccount()
                         await app.signOut()
                     } catch {
+                        Haptics.error()
                         deleteError = "Couldn't delete your account. Please try again."
                     }
                 }

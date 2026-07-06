@@ -44,7 +44,7 @@ struct ConfettiView: View {
             )
         }
 
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        Haptics.success()
 
         Task {
             try? await Task.sleep(nanoseconds: 16_000_000)

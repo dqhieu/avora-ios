@@ -59,6 +59,7 @@ struct CommunityDetailView: View {
                 }
             }
             .buttonStyle(AvoraPrimaryButtonStyle())
+            .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
             .padding(.horizontal, Spacing.lg)
         } else if let prompt = item.customPrompt {
             NavigationLink(value: CreateRoute(style: .custom, placeholder: placeholder,
@@ -69,12 +70,14 @@ struct CommunityDetailView: View {
                 }
             }
             .buttonStyle(AvoraPrimaryButtonStyle())
+            .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
             .padding(.horizontal, Spacing.lg)
         }
     }
 
     private var likeButton: some View {
         Button {
+            Haptics.selection()
             let wasLiked = liked
             liked.toggle()
             likeCount += wasLiked ? -1 : 1
@@ -116,6 +119,7 @@ struct CommunityDetailView: View {
                     ForEach(more) { other in
                         NavigationLink(value: other) { moreThumbnail(other) }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                     }
                 }
             }

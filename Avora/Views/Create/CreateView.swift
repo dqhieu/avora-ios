@@ -67,7 +67,7 @@ struct CreateView: View {
                 }
             } else if poller.allTerminal {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { reset() } label: { ThiingIcon(name: "ActionRegenerate", size: 32) }
+                    Button { Haptics.tap(); reset() } label: { ThiingIcon(name: "ActionRegenerate", size: 32) }
                 }
             }
         }
@@ -84,7 +84,10 @@ struct CreateView: View {
         .sheet(isPresented: $showCredits) { CreditsView().environment(app) }
         .onChange(of: pickerItems) { _, items in Task { await loadPicked(items) } }
         .onChange(of: poller.allTerminal) { _, done in
-            if done { Task { await app.refreshProfile() } }
+            if done {
+                if hasResults { Haptics.success() }
+                Task { await app.refreshProfile() }
+            }
         }
         .onDisappear { poller.stop() }
         .ignoresSafeArea(.keyboard, edges: .all)
@@ -123,6 +126,7 @@ struct CreateView: View {
             stackedPhotos
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    Haptics.tap()
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         isPhotosExpanded = true
                     }
@@ -237,10 +241,12 @@ struct CreateView: View {
             .avoraGlass(in: Capsule())
         }
         .disabled(isWorking)
+        .onChange(of: quality) { Haptics.selection() }
     }
 
     private var promptField: some View {
         Button {
+            Haptics.tap()
             showPromptEditor = true
         } label: {
             HStack(spacing: Spacing.md) {
@@ -263,7 +269,7 @@ struct CreateView: View {
 
     @ViewBuilder private var controls: some View {
         if poller.allTerminal {
-            AvoraPrimaryButton { Task { await saveAll() } } label: {
+            AvoraPrimaryButton { Haptics.tap(); Task { await saveAll() } } label: {
                 HStack(spacing: Spacing.xs) {
                     ThiingIcon(name: saved ? "ActionSaved" : "ActionSave", size: saved ? 32 : 28)
                     Text(saved ? "Saved" : "Save to Photos")
@@ -273,7 +279,7 @@ struct CreateView: View {
         } else {
             HStack(spacing: Spacing.md) {
                 qualityMenu
-                AvoraPrimaryButton { Task { await generate() } } label: {
+                AvoraPrimaryButton { Haptics.impact(); Task { await generate() } } label: {
                     if isWorking {
                         HStack(spacing: Spacing.sm) {
                             ProgressView().tint(Color.avoraOnAccent)
@@ -359,6 +365,7 @@ struct CreateView: View {
             showCredits = true
         } catch {
             print("😂 \(error)")
+            Haptics.error()
             errorText = "Couldn't start generation. Try again."
         }
     }

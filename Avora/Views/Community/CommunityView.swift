@@ -33,7 +33,7 @@ struct CommunityView: View {
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { Haptics.tap(); showCredits = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -46,7 +46,7 @@ struct CommunityView: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
+                Button { Haptics.tap(); showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
                     .padding(.trailing, -4)
             }
         }
@@ -71,10 +71,12 @@ struct CommunityView: View {
             hasLoaded = true
         }
         .refreshable { await refresh() }
+        .onChange(of: sort) { Haptics.selection() }
     }
 
     private func toggleLike(_ item: CommunityItem) {
         guard let idx = items.firstIndex(where: { $0.id == item.id }) else { return }
+        Haptics.selection()
         let wasLiked = items[idx].likedByMe
         // optimistic flip
         items[idx].likedByMe.toggle()

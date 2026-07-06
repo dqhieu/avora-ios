@@ -35,7 +35,7 @@ struct SignupBonusModal: View {
 
                 SignupBonusCard(credits: credits)
 
-                AvoraPrimaryButton(action: onClaim) {
+                AvoraPrimaryButton(action: { Haptics.impact(); onClaim() }) {
                     Text("Claim")
                 }
             }

@@ -36,7 +36,7 @@ struct CreditsView: View {
                         priceString: weeklyPackage?.storeProduct.localizedPriceString,
                         isActive: app.profile?.subscriptionActive ?? false,
                         renewsOn: app.profile?.subscriptionPeriodEnd,
-                        onSubscribe: { if let p = weeklyPackage { Task { await buy(p, credits: nil) } } }
+                        onSubscribe: { if let p = weeklyPackage { Haptics.impact(); Task { await buy(p, credits: nil) } } }
                     )
 
                     if !packOptions.isEmpty {
@@ -44,12 +44,14 @@ struct CreditsView: View {
                         VStack(spacing: Spacing.lg) {
                             if let featuredPack {
                                 CreditTicketCard(pack: featuredPack.display, prominent: true) {
+                                    Haptics.impact()
                                     Task { await buy(featuredPack.package, credits: featuredPack.display.credits) }
                                 }
                             }
                             LazyVGrid(columns: cols, spacing: Spacing.lg) {
                                 ForEach(standardPacks) { opt in
                                     CreditTicketCard(pack: opt.display, prominent: false) {
+                                        Haptics.impact()
                                         Task { await buy(opt.package, credits: opt.display.credits) }
                                     }
                                 }
@@ -67,7 +69,7 @@ struct CreditsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }.disabled(busy)
+                    Button("Done") { Haptics.tap(); dismiss() }.disabled(busy)
                 }
             }
             .task { await load() }
@@ -92,7 +94,7 @@ struct CreditsView: View {
     }
 
     private var balanceHeader: some View {
-        Button { showBreakdown = true } label: {
+        Button { Haptics.tap(); showBreakdown = true } label: {
             HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
                 Text(app.profile?.totalCredits ?? 0, format: .number)
                     .font(.avoraHeroSans)
@@ -130,7 +132,7 @@ struct CreditsView: View {
         ContentUnavailableView {
             Label("Couldn’t load packs", image: "StateError")
         } actions: {
-            Button("Retry") { Task { await load() } }
+            Button("Retry") { Haptics.tap(); Task { await load() } }
         }
     }
 
@@ -173,6 +175,7 @@ struct CreditsView: View {
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
         } catch {
+            Haptics.error()
             purchaseError = error.localizedDescription
         }
     }

@@ -32,10 +32,10 @@ struct EditUsernameSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { Haptics.tap(); dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button("Save") { Haptics.tap(); save() }
                         .disabled(status != .available)
                 }
             }

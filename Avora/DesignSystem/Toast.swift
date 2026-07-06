@@ -50,7 +50,7 @@ final class ToastWindowManager {
         self.window = toastWindow
         self.hostingController = hostingController
 
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptics.tap()
     }
 
     func dismiss() {

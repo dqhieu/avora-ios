@@ -43,10 +43,10 @@ struct PromptEditorPopup: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onCancel() }
+                    Button("Cancel") { Haptics.tap(); onCancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { onSave(draft) }
+                    Button("Done") { Haptics.tap(); onSave(draft) }
                         .disabled(!valid)
                 }
             }

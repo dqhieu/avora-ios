@@ -19,6 +19,7 @@ struct CollectionView: View {
                     NavigationLink(value: gen) {
                         Thumb(path: gen.outputPath!, shared: gen.sharedAt != nil)
                     }.buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                     .onAppear {
                         if gen.id == items.last?.id { Task { await loadMore() } }
                     }
@@ -30,10 +31,10 @@ struct CollectionView: View {
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { showCredits = true }
+                CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { Haptics.tap(); showCredits = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
+                Button { Haptics.tap(); showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -146,6 +147,7 @@ private struct CreationDetailView: View {
                     }
                 }
                 .buttonStyle(AvoraPrimaryButtonStyle())
+                .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                 .padding(.horizontal, Spacing.lg)
             } else if let prompt = generation.customPrompt {
                 NavigationLink(value: CreateRoute(style: .custom, placeholder: placeholder, customPrompt: prompt)) {
@@ -155,6 +157,7 @@ private struct CreationDetailView: View {
                     }
                 }
                 .buttonStyle(AvoraPrimaryButtonStyle())
+                .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
                 .padding(.horizontal, Spacing.lg)
             }
         }
@@ -164,17 +167,20 @@ private struct CreationDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { Task { await save() } } label: {
+                Button { Haptics.tap(); Task { await save() } } label: {
                     ThiingIcon(name: "ActionSave", size: 28)
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     if shared {
+                        Haptics.warning()
                         Task { await setShared(false) }
                     } else if generation.customPrompt != nil {
+                        Haptics.tap()
                         showShareConfirm = true      // warn: prompt becomes public
                     } else {
+                        Haptics.tap()
                         Task { await setShared(true) }
                     }
                 } label: {
@@ -187,7 +193,7 @@ private struct CreationDetailView: View {
         .confirmationDialog(
             "Share to Community?", isPresented: $showShareConfirm, titleVisibility: .visible
         ) {
-            Button("Share") { Task { await setShared(true) } }
+            Button("Share") { Haptics.tap(); Task { await setShared(true) } }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Your prompt will be visible to others so they can create with it.")
