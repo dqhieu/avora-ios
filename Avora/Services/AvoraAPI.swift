@@ -174,6 +174,21 @@ struct AvoraAPI {
         return (items, next)
     }
 
+    /// Other publicly shared creations by one author, newest first, excluding the
+    /// creation currently being viewed. Filters by username (unique per profile);
+    /// no schema change needed. Returns [] when the author has no other shared work.
+    func communityByUser(_ username: String, excluding id: UUID, limit: Int = 12) async throws
+        -> [CommunityItem] {
+        try await db.from("community_feed")
+            .select("id,output_path,style_id,custom_prompt,like_count,username,liked_by_me,shared_at")
+            .eq("username", value: username)
+            .neq("id", value: id.uuidString)
+            .order("shared_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+    }
+
     func shareCreation(_ id: UUID) async throws {
         try await db.rpc("share_creation", params: ["gen_id": id.uuidString]).execute()
     }
