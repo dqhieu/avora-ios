@@ -54,6 +54,7 @@ struct SettingsView: View {
                 Text("Permanently deletes your account, images, and remaining credits.")
             }
         }
+        .avoraSoftScrollEdge()
         .navigationTitle("Settings")
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {

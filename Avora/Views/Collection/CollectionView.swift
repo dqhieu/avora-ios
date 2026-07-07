@@ -26,6 +26,7 @@ struct CollectionView: View {
                 }
             }.padding(Spacing.sm)
         }
+        .avoraSoftScrollEdge()
         .navigationTitle("Collection")
         .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }

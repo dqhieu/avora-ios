@@ -147,6 +147,7 @@ struct CreateView: View {
         }
         .scrollTargetBehavior(.viewAligned)
         .scrollIndicators(.hidden)
+        .avoraSoftScrollEdge()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 

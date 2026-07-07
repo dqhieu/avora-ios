@@ -41,6 +41,7 @@ struct CommunityDetailView: View {
             }
             .padding(.vertical, Spacing.lg)
         }
+        .avoraSoftScrollEdge()
         .navigationTitle(style?.name ?? "Creation")
         .navigationBarTitleDisplayMode(.inline)
         .task {

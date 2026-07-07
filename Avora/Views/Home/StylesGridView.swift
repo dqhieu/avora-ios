@@ -50,6 +50,7 @@ struct StylesGridView: View {
                 }
             }
         }
+        .avoraSoftScrollEdge()
         .navigationTitle("Avora")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

@@ -28,6 +28,7 @@ struct CommunityView: View {
             }
             .padding(Spacing.sm)
         }
+        .avoraSoftScrollEdge()
         .navigationTitle("Community")
         .navigationDestination(for: CommunityItem.self) { CommunityDetailView(item: $0) }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }

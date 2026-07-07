@@ -14,6 +14,16 @@ extension View {
         }
     }
 
+    /// Soft scroll edge effect on iOS 26+, no-op on 18–25.
+    @ViewBuilder
+    func avoraSoftScrollEdge() -> some View {
+        if #available(iOS 26.0, *) {
+            self.scrollEdgeEffectStyle(.soft, for: .all)
+        } else {
+            self
+        }
+    }
+
     /// Solid graphite elevated surface: gradient fill + top highlight + soft shadow.
     func avoraElevatedSurface(cornerRadius: CGFloat = Radius.md) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)

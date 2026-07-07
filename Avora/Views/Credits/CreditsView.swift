@@ -64,6 +64,7 @@ struct CreditsView: View {
                 .padding(Spacing.lg)
                 .disabled(busy)
             }
+            .avoraSoftScrollEdge()
             .background(LinearGradient.avoraBackgroundGradient.ignoresSafeArea())
             .navigationTitle("Credits")
             .navigationBarTitleDisplayMode(.inline)
