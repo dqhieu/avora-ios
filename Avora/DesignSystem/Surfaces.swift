@@ -14,11 +14,11 @@ extension View {
         }
     }
 
-    /// Soft scroll edge effect on iOS 26+, no-op on 18–25.
+    /// Soft top scroll edge effect on iOS 26+, no-op on 18–25.
     @ViewBuilder
     func avoraSoftScrollEdge() -> some View {
         if #available(iOS 26.0, *) {
-            self.scrollEdgeEffectStyle(.soft, for: .all)
+            self.scrollEdgeEffectStyle(.soft, for: .top)
         } else {
             self
         }
