@@ -105,12 +105,10 @@ private struct Thumb: View {
             .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
             .overlay(alignment: .topLeading) {
                 if shared {
-                    Label("Shared", systemImage: "person.2.fill")
-                        .font(.avoraCaption2)
-                        .labelStyle(.iconOnly)
-                        .padding(6)
-                        .background(.ultraThinMaterial, in: Circle())
-                        .padding(6)
+                    ThiingIcon(name: "ActionShare", size: 20)
+                        .padding(4)
+                        .avoraGlass(in: Circle())
+                        .padding(4)
                 }
             }
     }
