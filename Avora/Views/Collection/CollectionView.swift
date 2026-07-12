@@ -28,7 +28,12 @@ struct CollectionView: View {
         }
         .avoraSoftScrollEdge()
         .navigationTitle("Collection")
-        .navigationDestination(for: Generation.self) { CreationDetailView(generation: $0) }
+        .navigationDestination(for: Generation.self) { gen in
+            CreationDetailView(generation: gen, onDelete: { deletedId in
+                items.removeAll { $0.id == deletedId }
+                SnapshotStore.saveCollection(items)
+            })
+        }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -116,15 +121,20 @@ private struct Thumb: View {
 
 private struct CreationDetailView: View {
     let generation: Generation
-    init(generation: Generation) {
+    let onDelete: (UUID) -> Void
+    init(generation: Generation, onDelete: @escaping (UUID) -> Void) {
         self.generation = generation
+        self.onDelete = onDelete
         _shared = State(initialValue: generation.sharedAt != nil)
     }
     @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
     @State private var style: Style?
     @State private var shared: Bool
     @State private var showShareConfirm = false
     @State private var sharing = false
+    @State private var showDeleteConfirm = false
+    @State private var deleting = false
 
     /// The creation's own output image, reused as the placeholder in `CreateView`.
     private var placeholder: RemoteImageRef? {
@@ -195,6 +205,25 @@ private struct CreationDetailView: View {
                   Text("Your prompt will be visible to others so they can create with it.")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Haptics.warning()
+                    showDeleteConfirm = true
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.red)
+                }
+                .disabled(deleting)
+                .confirmationDialog(
+                  "Delete creation?", isPresented: $showDeleteConfirm, titleVisibility: .visible
+                ) {
+                  Button("Delete", role: .destructive) { Haptics.warning(); Task { await delete() } }
+                  Button("Cancel", role: .cancel) { }
+                } message: {
+                  Text("This permanently removes it. This can't be undone.")
+                }
+            }
         }
         .task { await resolveStyle() }
     }
@@ -227,5 +256,19 @@ private struct CreationDetailView: View {
                 title: newValue ? "Shared to Community" : "Removed from Community"
             )
         } catch { }
+    }
+
+    private func delete() async {
+        deleting = true
+        defer { deleting = false }
+        do {
+            try await AvoraAPI.shared.deleteCreation(generation.id)
+            if generation.sharedAt != nil { SnapshotStore.clearCommunity() }
+            onDelete(generation.id)
+            dismiss()
+            ToastWindowManager.shared.show(title: "Deleted")
+        } catch {
+            ToastWindowManager.shared.show(title: "Couldn't delete")
+        }
     }
 }
