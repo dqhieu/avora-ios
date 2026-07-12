@@ -221,4 +221,11 @@ struct AvoraAPI {
         let _: [String: Bool] = try await db.functions
             .invoke("delete-account", options: .init(method: .post))
     }
+
+    func deleteCreation(_ id: UUID) async throws {
+        struct Body: Encodable { let id: String }
+        let _: [String: Bool] = try await db.functions.invoke(
+            "delete-creation",
+            options: .init(method: .post, body: Body(id: id.uuidString)))
+    }
 }
