@@ -33,7 +33,7 @@ guided generation.
 | Persistence | `@AppStorage("hasSeenWelcome")` | Device-local; no server/profile change |
 | Sequencing | Welcome → signup-bonus modal → grid | Gate bonus behind `hasSeenWelcome` |
 | Presentation | `.fullScreenCover` over `RootTabView` | |
-| Re-show from Settings | Not included | Out of scope |
+| Re-show from Settings | "Show Intro Again" row | Resets `hasSeenWelcome`, re-triggers carousel |
 | Imagery | Bundled before→after pair, with fallback | Real assets provided later |
 
 ## 3. Slides
@@ -70,6 +70,14 @@ guided generation.
     carousel and the bonus modal never render at the same time:
     `showSignupBonus = hasSeenWelcome && profile?.signupBonusSeen == false && config.signupExtra > 0`.
 
+- `Avora/Views/Settings/SettingsView.swift`
+  - Add `@AppStorage("hasSeenWelcome") private var hasSeenWelcome = false`.
+  - Add a **"Show Intro Again"** button (in the Restore Purchases / Sign Out
+    section). On tap: `Haptics.tap()`, set `hasSeenWelcome = false`, then
+    `dismiss()` the Settings sheet — the carousel re-appears over `RootTabView`
+    (the signup-bonus modal stays hidden since `signupBonusSeen` is already
+    true for an existing user).
+
 ### Flow
 
 ```
@@ -104,9 +112,11 @@ Login ──► isAuthenticated
   1. Fresh install → Welcome carousel appears before the signup-bonus modal.
   2. Finishing (or Skip) → carousel dismisses, bonus modal shows, then grid.
   3. Relaunch → carousel does **not** reappear.
+  4. Settings → "Show Intro Again" → Settings dismisses and the carousel
+     re-appears (no signup-bonus modal for the existing user).
 
 ## 7. Out of scope (YAGNI)
 
 - Interactive coach marks / guided first generation.
 - Per-account server flag (device-local `AppStorage` is sufficient).
-- Analytics events, extra localization, Settings "show again" row.
+- Analytics events, extra localization.
