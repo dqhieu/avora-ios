@@ -66,20 +66,16 @@ struct WelcomeView: View {
     @ViewBuilder
     private func artwork(for art: WelcomeSlide.Art) -> some View {
         switch art {
-        case .hero: WelcomeHero(frames: heroFrames)
+        case .hero: WelcomeHero(samplePath: galleryPaths.first, hasAssetPair: hasOnboardingPair)
         case .gallery: WelcomeStyleGallery(paths: galleryPaths)
         case .ready: WelcomeReadyArt()
         }
     }
 
-    // Opens with the bundled before/after pair when present, then flows through
-    // real style samples. Empty until styles load (see `.task`).
-    private var heroFrames: [WelcomeFrame] {
-        var frames: [WelcomeFrame] = []
-        if UIImage(named: "OnboardingBefore") != nil { frames.append(.asset("OnboardingBefore")) }
-        if UIImage(named: "OnboardingAfter") != nil { frames.append(.asset("OnboardingAfter")) }
-        frames += galleryPaths.prefix(4).map(WelcomeFrame.remote)
-        return frames
+    // Real before/after pair once both assets are bundled; until then the hero
+    // falls back to a style sample (styled "after" vs a desaturated "before").
+    private var hasOnboardingPair: Bool {
+        UIImage(named: "OnboardingBefore") != nil && UIImage(named: "OnboardingAfter") != nil
     }
 
     private var galleryPaths: [String] {

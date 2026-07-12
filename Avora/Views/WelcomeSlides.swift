@@ -1,87 +1,86 @@
 import SwiftUI
-import Combine
 
-/// A single showcase frame in the welcome hero — either a bundled asset (the
-/// real before/after pair) or a remote style sample.
-enum WelcomeFrame {
-    case asset(String)
-    case remote(String)
-}
-
-/// The app's signature glowing scan line, reused as a decorative sweep over the
-/// onboarding hero (mirrors `ScanReveal`'s generation animation).
-private struct ScanLine: View {
-    var body: some View {
-        ZStack {
-            Capsule().fill(Color.white).frame(height: 2.5).blur(radius: 8)
-            Capsule().fill(Color.white).frame(height: 2.5)
-        }
-    }
-}
-
-/// Slide 1 artwork: a large card that crossfades through styled results with a
-/// slow zoom while the scan line sweeps — showing the "photo → art" magic even
-/// before real before/after art is bundled.
+/// Slide 1 artwork: a single before/after comparison card with an animated
+/// vertical divider that sweeps to reveal the styled "after" over the "before".
+/// Uses the bundled before/after pair when present; otherwise a real style
+/// sample (styled "after" vs a desaturated "before") so it works with no assets.
 struct WelcomeHero: View {
-    let frames: [WelcomeFrame]
+    let samplePath: String?
+    let hasAssetPair: Bool
 
-    @State private var index = 0
-    @State private var zoom = false
-    @State private var sweep = false
-
+    @State private var divider: CGFloat = 0.32
     private let cardHeight: CGFloat = 360
-    private let timer = Timer.publish(every: 2.6, on: .main, in: .common).autoconnect()
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-        ZStack {
-            if frames.isEmpty {
-                ZStack {
-                    shape.fill(Color.avoraSurface)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 48))
-                        .foregroundStyle(Color.avoraTextSecondary)
-                }
-            } else {
-                ZStack {
-                    ForEach(frames.indices, id: \.self) { i in
-                        frameView(frames[i])
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .clipped()
-                            .opacity(i == index ? 1 : 0)
-                    }
-                }
-                .scaleEffect(zoom ? 1.08 : 1.0)
+        GeometryReader { geo in
+            let w = geo.size.width
+            ZStack(alignment: .leading) {
+                afterView
+                    .frame(width: w, height: cardHeight).clipped()
+                beforeView
+                    .frame(width: w, height: cardHeight).clipped()
+                    .mask(alignment: .leading) { Rectangle().frame(width: max(0, w * divider)) }
+                dividerLine(x: w * divider)
             }
-
-            VStack {
-                ScanLine().padding(.horizontal, 10)
-                Spacer(minLength: 0)
-            }
-            .offset(y: sweep ? cardHeight - 3 : 0)
         }
         .frame(height: cardHeight)
         .clipShape(shape)
         .overlay(shape.stroke(Color.avoraBorderHighlight, lineWidth: 0.5))
+        .overlay(alignment: .topLeading) { tag("Before").padding(10) }
+        .overlay(alignment: .topTrailing) { tag("After").padding(10) }
         .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
         .onAppear {
-            withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true)) { sweep = true }
-            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) { zoom = true }
-        }
-        .onReceive(timer) { _ in
-            guard frames.count > 1 else { return }
-            withAnimation(.easeInOut(duration: 1.0)) { index = (index + 1) % frames.count }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
+                divider = 0.68
+            }
         }
     }
 
-    @ViewBuilder
-    private func frameView(_ frame: WelcomeFrame) -> some View {
-        switch frame {
-        case .asset(let name):
-            Image(name).resizable().aspectRatio(contentMode: .fill)
-        case .remote(let path):
-            RemoteImage(path: path, source: .sample, contentMode: .fill)
+    @ViewBuilder private var afterView: some View {
+        if hasAssetPair {
+            Image("OnboardingAfter").resizable().aspectRatio(contentMode: .fill)
+        } else if let samplePath {
+            RemoteImage(path: samplePath, source: .sample, contentMode: .fill)
+        } else {
+            Color.avoraSurface
         }
+    }
+
+    @ViewBuilder private var beforeView: some View {
+        if hasAssetPair {
+            Image("OnboardingBefore").resizable().aspectRatio(contentMode: .fill)
+        } else if let samplePath {
+            RemoteImage(path: samplePath, source: .sample, contentMode: .fill)
+                .grayscale(1).contrast(1.05)
+        } else {
+            Color.avoraSurface.grayscale(1)
+        }
+    }
+
+    // Glowing vertical seam with a grabber handle, echoing the app's scan line.
+    private func dividerLine(x: CGFloat) -> some View {
+        ZStack {
+            Capsule().fill(Color.white).frame(width: 2.5, height: cardHeight).blur(radius: 6)
+            Capsule().fill(Color.white).frame(width: 2.5, height: cardHeight)
+            Circle().fill(Color.white).frame(width: 28, height: 28)
+                .overlay {
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.55))
+                }
+                .shadow(color: .black.opacity(0.25), radius: 4, y: 1)
+        }
+        .position(x: x, y: cardHeight / 2)
+    }
+
+    private func tag(_ text: String) -> some View {
+        Text(text)
+            .font(.avoraCaption2)
+            .foregroundStyle(Color.avoraTextPrimary)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(Color.avoraSurface.opacity(0.9), in: Capsule())
+            .overlay(Capsule().stroke(Color.avoraBorderHighlight, lineWidth: 0.5))
     }
 }
 
