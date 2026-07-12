@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var confirmDelete = false
     @State private var deleteError: String?
     @State private var editingUsername = false
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     #if DEBUG
     @AppStorage(AvoraConfig.mockGenerationKey) private var mockGeneration = false
     #endif
@@ -33,6 +34,11 @@ struct SettingsView: View {
                         try? await AvoraPurchases.restore()
                         await app.refreshProfile()
                     }
+                }
+                Button("Show Intro Again") {
+                    Haptics.tap()
+                    hasSeenWelcome = false
+                    dismiss()
                 }
                 Button("Sign Out") {
                     Haptics.tap()

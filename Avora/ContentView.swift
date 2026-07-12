@@ -2,9 +2,16 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppState.self) private var app
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
+
+    private var showWelcome: Bool {
+        app.isAuthenticated && !hasSeenWelcome
+    }
 
     private var showSignupBonus: Bool {
-        app.profile?.signupBonusSeen == false && app.config.signupExtra > 0
+        hasSeenWelcome
+            && app.profile?.signupBonusSeen == false
+            && app.config.signupExtra > 0
     }
 
     var body: some View {
@@ -27,6 +34,13 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(LinearGradient.avoraBackgroundGradient.ignoresSafeArea())
         .animation(.easeInOut(duration: 0.25), value: showSignupBonus)
+        .fullScreenCover(isPresented: Binding(
+            get: { showWelcome },
+            set: { if !$0 { hasSeenWelcome = true } }
+        )) {
+            WelcomeView { hasSeenWelcome = true }
+                .environment(app)
+        }
     }
 }
 
