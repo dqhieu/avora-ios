@@ -186,17 +186,17 @@ private struct CreationDetailView: View {
                     ThiingIcon(name: "ActionShare", size: 28, active: shared)
                 }
                 .disabled(sharing)
+                .confirmationDialog(
+                  "Share to Community?", isPresented: $showShareConfirm, titleVisibility: .visible
+                ) {
+                  Button("Share") { Haptics.tap(); Task { await setShared(true) } }
+                  Button("Cancel", role: .cancel) { }
+                } message: {
+                  Text("Your prompt will be visible to others so they can create with it.")
+                }
             }
         }
         .task { await resolveStyle() }
-        .confirmationDialog(
-            "Share to Community?", isPresented: $showShareConfirm, titleVisibility: .visible
-        ) {
-            Button("Share") { Haptics.tap(); Task { await setShared(true) } }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Your prompt will be visible to others so they can create with it.")
-        }
     }
 
     private func resolveStyle() async {
