@@ -18,8 +18,10 @@ struct WelcomeHero: View {
             ZStack(alignment: .leading) {
                 beforeView
                     .frame(width: w, height: cardHeight).clipped()
+                    .overlay(alignment: .topTrailing) { tag("Before").padding(10) }
                 afterView
                     .frame(width: w, height: cardHeight).clipped()
+                    .overlay(alignment: .topTrailing) { tag("After").padding(10) }
                     .mask(alignment: .leading) { Rectangle().frame(width: max(0, w * divider)) }
                 dividerLine(x: w * divider)
             }
@@ -27,8 +29,6 @@ struct WelcomeHero: View {
         .frame(height: cardHeight)
         .clipShape(shape)
         .overlay(shape.stroke(Color.avoraBorderHighlight, lineWidth: 0.5))
-        .overlay(alignment: .topTrailing) { tag("After").padding(10) }
-        .overlay(alignment: .topLeading) { tag("Before").padding(10) }
         .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
         .onAppear {
             withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
