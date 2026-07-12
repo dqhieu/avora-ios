@@ -8,7 +8,7 @@ struct WelcomeHero: View {
     let samplePath: String?
     let hasAssetPair: Bool
 
-    @State private var divider: CGFloat = 0.32
+    @State private var divider: CGFloat = 0
     private let cardHeight: CGFloat = 360
 
     var body: some View {
@@ -16,9 +16,9 @@ struct WelcomeHero: View {
         GeometryReader { geo in
             let w = geo.size.width
             ZStack(alignment: .leading) {
-                afterView
-                    .frame(width: w, height: cardHeight).clipped()
                 beforeView
+                    .frame(width: w, height: cardHeight).clipped()
+                afterView
                     .frame(width: w, height: cardHeight).clipped()
                     .mask(alignment: .leading) { Rectangle().frame(width: max(0, w * divider)) }
                 dividerLine(x: w * divider)
@@ -27,12 +27,12 @@ struct WelcomeHero: View {
         .frame(height: cardHeight)
         .clipShape(shape)
         .overlay(shape.stroke(Color.avoraBorderHighlight, lineWidth: 0.5))
-        .overlay(alignment: .topLeading) { tag("Before").padding(10) }
-        .overlay(alignment: .topTrailing) { tag("After").padding(10) }
+        .overlay(alignment: .topLeading) { tag("After").padding(10) }
+        .overlay(alignment: .topTrailing) { tag("Before").padding(10) }
         .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
         .onAppear {
             withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
-                divider = 0.68
+                divider = 1
             }
         }
     }
