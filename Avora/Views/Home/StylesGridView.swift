@@ -21,21 +21,6 @@ struct StylesGridView: View {
                         }
                     }
                     .padding()
-                } header: {
-                    HStack {
-                        Text("All styles")
-                            .font(.avoraTitle2)
-                        Spacer()
-                        NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
-                            Text("Custom")
-                                .font(.avoraSubheadline)
-                                .foregroundStyle(Color.avoraAccent)
-                        }
-                        .contentShape(.rect)
-                        .buttonStyle(AvoraCustomButtonStyle())
-                        .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
-                    }
-                    .padding(.horizontal, Spacing.xl)
                 }
 
                 if loadError && app.styles.isEmpty {
@@ -49,9 +34,11 @@ struct StylesGridView: View {
                     .padding(.top, 40)
                 }
             }
+            .padding(.bottom, 80) // clear the floating custom-prompt button (56pt + 24pt inset)
         }
+        .overlay(alignment: .bottomTrailing) { customPromptButton }
         .avoraSoftScrollEdge()
-        .navigationTitle("Avora")
+        .navigationTitle("Styles")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { Haptics.tap(); showCredits = true }
@@ -69,6 +56,21 @@ struct StylesGridView: View {
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .task { await load() }
         .refreshable { await load(force: true) }
+    }
+
+    // Floating entry point to the custom-prompt creation flow. Reuses the
+    // CreateRoute destination already registered on this stack, so tapping it
+    // pushes CreateView with Style.custom.
+    private var customPromptButton: some View {
+        NavigationLink(value: CreateRoute(style: .custom, placeholder: nil)) {
+            ThiingIcon(name: "ActionCustom", size: 40)
+                .frame(width: 56, height: 56)
+                .avoraGlass(in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Custom prompt")
+        .simultaneousGesture(TapGesture().onEnded { Haptics.tap() })
+        .padding(Spacing.xl)
     }
 
     private func load(force: Bool = false) async {
