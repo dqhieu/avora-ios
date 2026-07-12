@@ -210,9 +210,11 @@ private struct CreationDetailView: View {
                     Haptics.warning()
                     showDeleteConfirm = true
                 } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.red)
+                    if deleting {
+                        ProgressView()
+                    } else {
+                        ThiingIcon(name: "ActionDelete", size: 28)
+                    }
                 }
                 .disabled(deleting)
                 .confirmationDialog(
