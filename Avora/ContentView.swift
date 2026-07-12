@@ -39,6 +39,7 @@ struct ContentView: View {
             set: { if !$0 { hasSeenWelcome = true } }
         )) {
             WelcomeView { hasSeenWelcome = true }
+                .environment(app)
         }
     }
 }
