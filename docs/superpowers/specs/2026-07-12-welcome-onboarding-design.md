@@ -36,29 +36,43 @@ guided generation.
 | Re-show from Settings | "Show Intro Again" row | Resets `hasSeenWelcome`, re-triggers carousel |
 | Imagery | Bundled before→after pair, with fallback | Real assets provided later |
 
-## 3. Slides
+## 3. Slides (animated direction)
+
+Research into the niche (Lensa, Remini, EPIK, Photoleap, Prisma) showed the
+transformation *is* the onboarding: these apps **show** an animated photo→art
+reveal and a living gallery of real results rather than describing the app, and
+close on a success-state celebration. Avora already owns every piece to do this —
+the `ScanReveal` scan-line, remote style samples, and `ConfettiView` — so the
+slides are animated, not static.
 
 | # | Title | Subtitle | Visual |
 |---|---|---|---|
-| 1 | Turn your photos into art | Pick a style and Avora restyles your photo with AI. | Before→after hero pair |
-| 2 | Pick a style, add your photo | Tap any style, choose a photo, and we do the rest. | Style tile + photo glyph → result |
-| 3 | Ready to create | Your first credits are on us. | App's 3D icon + "Get Started" CTA |
+| 1 | Turn your photos into art | Avora restyles your photo with AI in seconds. | Hero card: crossfades through styled results with a slow zoom while the signature scan line sweeps. Opens with the bundled before→after pair when present. |
+| 2 | Pick a style, add your photo | Dozens of styles — tap one, choose a photo, done. | Living gallery: 3-wide grid of real style samples that spring in with a stagger. |
+| 3 | Ready to create | Your first credits are on us. | App's 3D create icon with a gentle pulse; confetti burst fires on reaching the slide. |
 
 - Primary button: **"Next"** on slides 1–2, **"Get Started"** on slide 3.
 - **"Skip"** control in the top corner (dismisses immediately, same as finishing).
-- Page-dot indicator.
+- Page-dot indicator; per-slide text rises + fades in as it becomes active; page
+  changes fire a selection haptic.
+- Style samples come from `app.styles` (loaded on appear via `app.loadStyles()`);
+  every slide has a graceful glyph/gradient fallback while images load.
 
 ## 4. Architecture
 
-### New file
-- `Avora/Views/WelcomeView.swift`
-  - Paged `TabView` (`.page` index style) over a local `[WelcomeSlide]` array
-    (`image`/`title`/`subtitle`).
-  - Styled with existing design tokens: `.avoraBody`, `Spacing`, `avoraGlass`,
-    `LinearGradient.avoraBackgroundGradient`.
-  - Dismiss callback fired by both "Get Started" and "Skip".
-  - Keep under the 200-line file limit; slide data + a small `WelcomeSlide`
-    struct live in the same file.
+### New files
+- `Avora/Views/WelcomeView.swift` — orchestrator: paged `TabView`, footer (dots +
+  CTA), Skip, confetti overlay, page haptics, `slidePage`/text entrance, and the
+  `WelcomeSlide` model. Loads styles on appear via `.task { app.loadStyles() }`.
+- `Avora/Views/WelcomeSlides.swift` — the animated artwork: `WelcomeHero`
+  (scan-line + crossfade + zoom), `WelcomeStyleGallery` (staggered grid),
+  `WelcomeReadyArt` (pulsing icon), and the `WelcomeFrame` enum. Imports `Combine`
+  for the hero's crossfade `Timer`.
+- Styled with existing design tokens (`Spacing`, `Radius`, typography, colors,
+  `LinearGradient.avoraBackgroundGradient`); reuses `RemoteImage`, `ThiingIcon`,
+  `ConfettiView`. Dismiss callback fired by both "Get Started" and "Skip".
+- `ContentView` injects `.environment(app)` into the cover so `WelcomeView` can
+  read `app.styles`.
 
 ### Modified file
 - `Avora/ContentView.swift`
