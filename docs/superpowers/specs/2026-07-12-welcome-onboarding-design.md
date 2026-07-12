@@ -47,7 +47,7 @@ slides are animated, not static.
 
 | # | Title | Subtitle | Visual |
 |---|---|---|---|
-| 1 | Turn your photos into art | Avora restyles your photo with AI in seconds. | Hero card: crossfades through styled results with a slow zoom while the signature scan line sweeps. Opens with the bundled before→after pair when present. |
+| 1 | Turn your photos into art | Avora restyles your photo with AI in seconds. | Before/after comparison in one card: a glowing vertical divider (with grabber handle) sweeps left↔right to reveal the styled "after" over the "before". Uses the bundled before/after pair when present; otherwise a style sample ("after") vs its desaturated copy ("before"). |
 | 2 | Pick a style, add your photo | Dozens of styles — tap one, choose a photo, done. | Living gallery: 3-wide grid of real style samples that spring in with a stagger. |
 | 3 | Ready to create | Your first credits are on us. | App's 3D create icon with a gentle pulse; confetti burst fires on reaching the slide. |
 
