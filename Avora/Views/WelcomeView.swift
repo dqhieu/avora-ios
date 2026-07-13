@@ -4,7 +4,7 @@ import SwiftUI
 /// loop — a photo transforming into art, the living style gallery, and a
 /// celebratory finish — then release the user into the app. Presented as a
 /// full-screen cover by `ContentView`; `onFinish` is called once when the user
-/// finishes the last slide or taps Skip.
+/// finishes the last slide (Get Started).
 struct WelcomeView: View {
     @Environment(AppState.self) private var app
     let onFinish: () -> Void
@@ -25,12 +25,17 @@ struct WelcomeView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            skipButton
             ConfettiView(trigger: confetti).allowsHitTesting(false)
         }
         .overlay(alignment: .bottom) { footer }
         .font(.avoraBody)
-        .task { try? await app.loadStyles() }
+        // Load the bonus data (config + profile) first so slide 3 can reveal the
+        // real credit count, then the styles that feed slides 1–2.
+        .task {
+            await app.loadConfig()
+            if app.profile == nil { await app.refreshProfile() }
+            try? await app.loadStyles()
+        }
         .onChange(of: page) { _, new in
             Haptics.selection()
             if new == slides.count - 1 { confetti += 1 }
@@ -48,7 +53,7 @@ struct WelcomeView: View {
                     .font(.avoraTitle)
                     .foregroundStyle(Color.avoraTextPrimary)
                     .multilineTextAlignment(.center)
-                Text(slide.subtitle)
+                Text(subtitle(for: slide))
                     .font(.avoraSubheadline)
                     .foregroundStyle(Color.avoraTextSecondary)
                     .multilineTextAlignment(.center)
@@ -68,8 +73,24 @@ struct WelcomeView: View {
         switch art {
         case .hero: WelcomeHero(samplePath: galleryPaths.first, hasAssetPair: hasOnboardingPair)
         case .gallery: WelcomeStyleGallery(paths: galleryPaths)
-        case .ready: WelcomeReadyArt()
+        case .ready: WelcomeReadyArt(credits: bonusCredits)
         }
+    }
+
+    // The unclaimed sign-up bonus amount, or nil when there's no bonus to reveal
+    // (already claimed, none configured, or config/profile not yet loaded).
+    private var bonusCredits: Int? {
+        guard app.profile?.signupBonusSeen == false, app.config.signupExtra > 0 else { return nil }
+        return app.config.signupExtra
+    }
+
+    // Slide 3 promises the bonus only when there's one to show; otherwise it
+    // stays generic so a no-bonus/already-claimed user isn't over-promised.
+    private func subtitle(for slide: WelcomeSlide) -> String {
+        if case .ready = slide.art, bonusCredits == nil {
+            return "Let's make something."
+        }
+        return slide.subtitle
     }
 
     // Real before/after pair once both assets are bundled; until then the hero
@@ -80,16 +101,6 @@ struct WelcomeView: View {
 
     private var galleryPaths: [String] {
         app.styles.compactMap(\.sampleImagePath)
-    }
-
-    private var skipButton: some View {
-        HStack {
-            Spacer()
-            Button("Skip") { Haptics.tap(); onFinish() }
-                .font(.avoraSubheadline)
-                .foregroundStyle(Color.avoraTextSecondary)
-                .padding(Spacing.lg)
-        }
     }
 
     private var footer: some View {
@@ -106,6 +117,8 @@ struct WelcomeView: View {
     private func advance() {
         Haptics.impact()
         if page == slides.count - 1 {
+            // Getting Started from the last slide claims the bonus it just showed.
+            if bonusCredits != nil { Task { await app.markSignupBonusSeen() } }
             onFinish()
         } else {
             withAnimation { page += 1 }
@@ -149,7 +162,16 @@ private struct WelcomePageDots: View {
 }
 
 #if DEBUG
-#Preview("Welcome carousel") {
+#Preview("Welcome — with bonus") {
+    let app = AppState()
+    app.profile = Profile(weeklyCredits: 1000, extraCredits: 0, subscriptionActive: false,
+                          subscriptionPeriodEnd: nil, signupBonusSeen: false, username: nil)
+    app.config = CreditConfig(weeklyAmount: 1000, signupExtra: 60, generationCost: 20,
+                              extraPack: 500, costLow: 20, costMedium: 30, costHigh: 120)
+    return WelcomeView(onFinish: {}).environment(app)
+}
+
+#Preview("Welcome — no bonus") {
     WelcomeView(onFinish: {}).environment(AppState())
 }
 #endif
