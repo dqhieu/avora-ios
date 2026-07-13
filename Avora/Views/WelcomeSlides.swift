@@ -123,14 +123,23 @@ struct WelcomeStyleGallery: View {
     }
 }
 
-/// Slide 3 artwork: the app's create icon with a gentle pulse.
+/// Slide 3 artwork: the sign-up bonus ticket with its real credit count when
+/// the user has an unclaimed bonus, otherwise the app's create icon with a
+/// gentle pulse. `credits` is non-nil only once the bonus is known to be
+/// available and unclaimed.
 struct WelcomeReadyArt: View {
+    let credits: Int?
     @State private var pulse = false
+
     var body: some View {
-        ThiingIcon(name: "TabCreate", size: 128)
-            .scaleEffect(pulse ? 1.06 : 0.92)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) { pulse = true }
-            }
+        if let credits {
+            SignupBonusCard(credits: credits)
+        } else {
+            ThiingIcon(name: "TabCreate", size: 128)
+                .scaleEffect(pulse ? 1.06 : 0.92)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) { pulse = true }
+                }
+        }
     }
 }

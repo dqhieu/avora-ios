@@ -8,24 +8,10 @@ struct ContentView: View {
         app.isAuthenticated && !hasSeenWelcome
     }
 
-    private var showSignupBonus: Bool {
-        hasSeenWelcome
-            && app.profile?.signupBonusSeen == false
-            && app.config.signupExtra > 0
-    }
-
     var body: some View {
         Group {
             if app.isAuthenticated {
                 RootTabView()
-                    .overlay {
-                        if showSignupBonus {
-                            SignupBonusModal(credits: app.config.signupExtra) {
-                                Task { await app.markSignupBonusSeen() }
-                            }
-                            .transition(.opacity)
-                        }
-                    }
             } else {
                 LoginView()
             }
@@ -33,7 +19,6 @@ struct ContentView: View {
         .font(.avoraBody)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(LinearGradient.avoraBackgroundGradient.ignoresSafeArea())
-        .animation(.easeInOut(duration: 0.25), value: showSignupBonus)
         .fullScreenCover(isPresented: Binding(
             get: { showWelcome },
             set: { if !$0 { hasSeenWelcome = true } }
