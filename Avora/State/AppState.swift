@@ -25,9 +25,13 @@ final class AppState {
         let session = try? await SupabaseClientProvider.client.auth.session
         if session != nil {
             isAuthenticated = true
-            await configureRevenueCat()
+            // Profile + config gate the credit UI, so fetch them first. The
+            // RevenueCat login is independent and can run concurrently rather
+            // than delaying the balance behind its own network round-trip.
+            async let rc: Void = configureRevenueCat()
             await refreshProfile()
             await loadConfig()
+            await rc
         } else if SupabaseClientProvider.client.auth.currentSession == nil {
             // No persisted session at all → definitely logged out. A failed
             // refresh with a cached session (e.g. offline) stays optimistic.
