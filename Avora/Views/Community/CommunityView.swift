@@ -67,6 +67,7 @@ struct CommunityView: View {
             }
         }
         .task(id: sort) {
+            hasLoaded = false
             items = SnapshotStore.loadCommunity(sort) ?? []
             await refresh()
             hasLoaded = true
