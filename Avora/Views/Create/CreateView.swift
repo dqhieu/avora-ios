@@ -330,9 +330,18 @@ struct CreateView: View {
         let imgs = sourceImages
         guard !imgs.isEmpty, !isSubmitting else { return }
         let cost = imgs.count * app.config.cost(for: quality)
-        guard (app.profile?.totalCredits ?? 0) >= cost else { showCredits = true; return }
+        // Enter the working state up front so the button shows its spinner and
+        // becomes non-tappable for the whole operation — including the profile
+        // fetch below, which does a network round-trip on a cold start.
         isSubmitting = true
         defer { isSubmitting = false }
+        // The profile may not have loaded yet on a cold start. Try once so the
+        // optimistic pre-check has real data instead of assuming zero credits.
+        if app.profile == nil { await app.refreshProfile() }
+        // Only short-circuit to the paywall when we actually know the balance is
+        // too low. If it's still unknown, let the authoritative server 402 decide
+        // (caught below) rather than falsely blocking a paying user.
+        if let credits = app.profile?.totalCredits, credits < cost { showCredits = true; return }
         errorText = nil
         saved = false
         do {

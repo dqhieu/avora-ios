@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>GIDClientID</key>
     <string>275533603122-295h0972cr57mk3409onrqk679chpd4m.apps.googleusercontent.com</string>
     <key>CFBundleURLTypes</key>
