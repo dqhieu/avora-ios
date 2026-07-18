@@ -9,6 +9,9 @@ struct SettingsView: View {
     @State private var confirmDelete = false
     @State private var deleteError: String?
     @State private var editingUsername = false
+    @State private var isRestoring = false
+    @State private var isSigningOut = false
+    @State private var isDeleting = false
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     #if DEBUG
     @AppStorage(AvoraConfig.mockGenerationKey) private var mockGeneration = false
@@ -31,22 +34,34 @@ struct SettingsView: View {
                 }
             }
             Section {
-                Button("Restore Purchases") {
+                Button {
                     Haptics.tap()
                     Task {
+                        isRestoring = true
                         try? await AvoraPurchases.restore()
                         await app.refreshProfile()
+                        isRestoring = false
                     }
+                } label: {
+                    actionLabel("Restore Purchases", loading: isRestoring)
                 }
+                .disabled(isRestoring)
                 Button("Show Intro Again") {
                     Haptics.tap()
                     hasSeenWelcome = false
                     dismiss()
                 }
-                Button("Sign Out") {
+                Button {
                     Haptics.tap()
-                    Task { await app.signOut() }
+                    Task {
+                        isSigningOut = true
+                        await app.signOut()
+                        isSigningOut = false
+                    }
+                } label: {
+                    actionLabel("Sign Out", loading: isSigningOut)
                 }
+                .disabled(isSigningOut)
             }
             #if DEBUG
             Section("Developer") {
@@ -61,10 +76,13 @@ struct SettingsView: View {
             }
             #endif
             Section {
-                Button("Delete Account", role: .destructive) {
+                Button(role: .destructive) {
                     Haptics.warning()
                     confirmDelete = true
+                } label: {
+                    actionLabel("Delete Account", loading: isDeleting)
                 }
+                .disabled(isDeleting)
             } footer: {
                 Text("Permanently deletes your account, images, and remaining credits.")
             }
@@ -87,13 +105,11 @@ struct SettingsView: View {
         } message: {
             Text(deleteError ?? "")
         }
-        .confirmationDialog(
-            "Delete your account? This cannot be undone.",
-            isPresented: $confirmDelete,
-            titleVisibility: .visible
-        ) {
+        .alert("Delete your account?", isPresented: $confirmDelete) {
+            Button("Cancel", role: .cancel) {}
             Button("Delete Everything", role: .destructive) {
                 Task {
+                    isDeleting = true
                     do {
                         try await AvoraAPI.shared.deleteAccount()
                         await app.signOut()
@@ -101,7 +117,21 @@ struct SettingsView: View {
                         Haptics.error()
                         deleteError = "Couldn't delete your account. Please try again."
                     }
+                    isDeleting = false
                 }
+            }
+        } message: {
+            Text("This cannot be undone.")
+        }
+    }
+
+    @ViewBuilder
+    private func actionLabel(_ title: String, loading: Bool) -> some View {
+        HStack {
+            Text(title)
+            if loading {
+                Spacer()
+                ProgressView()
             }
         }
     }

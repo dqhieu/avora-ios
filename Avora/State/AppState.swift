@@ -91,6 +91,7 @@ final class AppState {
         try? await SupabaseClientProvider.client.auth.signOut()
         isAuthenticated = false
         profile = nil
+        UserDefaults.standard.removeObject(forKey: "hasSeenWelcome")
         SnapshotStore.clearCollection()
         SnapshotStore.clearCommunity()
     }
