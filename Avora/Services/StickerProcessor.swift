@@ -25,7 +25,7 @@ nonisolated enum StickerProcessor {
 
     private static func renderPNG(from pngData: Data) -> Data? {
         guard let cgImage = UIImage(data: pngData)?.cgImage else { return nil }
-        let extent = CGRect(x: 0, y: 0, width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
+        let imageExtent = CGRect(x: 0, y: 0, width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
 
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up)
@@ -36,26 +36,39 @@ nonisolated enum StickerProcessor {
                 forInstances: result.allInstances, from: handler)
         else { return nil }
 
-        let source = CIImage(cgImage: cgImage)
-        let rawMask = CIImage(cvPixelBuffer: maskBuffer).cropped(to: extent)
-        let minSide = min(extent.width, extent.height)
-
-        // Round off the segmentation's stair-stepped edges before anything is drawn,
-        // so both the cutout and the border follow a clean silhouette.
-        let smoothMask = smooth(rawMask, blur: max(1.5, minSide * 0.004), extent: extent)
-
-        // Subject cut out along the smoothed silhouette (soft, anti-aliased edge).
-        let cutout = source.applyingFilter("CIBlendWithMask", parameters: [
-            kCIInputMaskImageKey: smoothMask.applyingFilter("CIMaskToAlpha"),
-        ])
-
-        // Die-cut white border: grow the smoothed mask, smooth the grown contour again
-        // for a clean rounded outer edge, then paint it white via mask→alpha.
+        let minSide = min(imageExtent.width, imageExtent.height)
         let borderRadius = max(6, minSide * borderFraction)
-        let border = smoothMask
+
+        // Pad the canvas so the die-cut border can grow outward even where the
+        // subject reaches the photo edge; without this margin the border would be
+        // clipped flush on those sides and the outline would look cut off.
+        let pad = ceil(borderRadius * 1.5)
+        let extent = imageExtent.insetBy(dx: -pad, dy: -pad)
+        let offset = CGAffineTransform(translationX: pad, y: pad)
+
+        let photoRect = imageExtent.applying(offset)
+        let silhouetteBlur = max(1.5, minSide * 0.004)
+        let source = CIImage(cgImage: cgImage).transformed(by: offset)
+        let rawMask = CIImage(cvPixelBuffer: maskBuffer).cropped(to: imageExtent).transformed(by: offset)
+
+        // Subject mask. Smooth the silhouette, but where the photo frame truncates the
+        // subject keep the edge crisp: clamping replicates the boundary pixels so the
+        // blur can't fade a solid edge into transparency (which looked like a shadow).
+        // Confined to the photo rect — the subject never spills into the pad.
+        let subjectMask = smooth(rawMask.clampedToExtent(), blur: silhouetteBlur, extent: photoRect)
+        let cutout = source.applyingFilter("CIBlendWithMask", parameters: [
+            kCIInputMaskImageKey: subjectMask.applyingFilter("CIMaskToAlpha"),
+        ]).cropped(to: photoRect)
+
+        // Die-cut white border: grow the *hard* raw mask (not the already-softened
+        // subject mask) outward, then `smooth` it. Growing the hard mask matters — the
+        // contrast step in `smooth` can only snap a hard edge back to a crisp outline;
+        // a pre-softened edge just spreads into a wide fade. The small blur rounds off
+        // the morphology's disc faceting so the contour stays smooth.
+        let border = rawMask.clampedToExtent()
             .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: borderRadius])
             .cropped(to: extent)
-        let whiteBorder = smooth(border, blur: max(1.5, borderRadius * 0.5), extent: extent)
+        let whiteBorder = smooth(border, blur: max(1.5, borderRadius * 0.15), extent: extent)
             .applyingFilter("CIMaskToAlpha")
 
         // Subject over white border over transparent.
