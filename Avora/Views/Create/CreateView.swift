@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import TipKit
 
 struct CreateView: View {
     let style: Style
@@ -16,6 +17,7 @@ struct CreateView: View {
     @State private var promptText: String
     @State private var showPromptEditor = false
     @State private var saved = false
+    private let selectPhotoTip = SelectPhotoTip()
 
     init(route: CreateRoute) {
         self.style = route.style
@@ -64,6 +66,7 @@ struct CreateView: View {
                         Text("Select photo")
                     }
                     .disabled(isWorking)
+                    .popoverTip(selectPhotoTip)
                 }
             } else if poller.allTerminal {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -82,7 +85,10 @@ struct CreateView: View {
             )
         }
         .sheet(isPresented: $showCredits) { CreditsView().environment(app) }
-        .onChange(of: pickerItems) { _, items in Task { await loadPicked(items) } }
+        .onChange(of: pickerItems) { _, items in
+            if !items.isEmpty { selectPhotoTip.invalidate(reason: .actionPerformed) }
+            Task { await loadPicked(items) }
+        }
         .onChange(of: poller.allTerminal) { _, done in
             if done {
                 if hasResults { Haptics.success() }

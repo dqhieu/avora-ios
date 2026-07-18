@@ -1,6 +1,7 @@
 import SwiftUI
 import GoogleSignIn
 import RevenueCat
+import TipKit
 
 @main
 struct AvoraApp: App {
@@ -17,6 +18,10 @@ struct AvoraApp: App {
         let app = AppState()
         _app = State(initialValue: app)
         Task { await app.bootstrap() }
+        try? Tips.configure([
+            .displayFrequency(.immediate),
+            .datastoreLocation(.applicationDefault)
+        ])
     }
 
     var body: some Scene {

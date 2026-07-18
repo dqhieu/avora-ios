@@ -1,4 +1,7 @@
 import SwiftUI
+#if DEBUG
+import TipKit
+#endif
 
 struct SettingsView: View {
     @Environment(AppState.self) private var app
@@ -49,6 +52,12 @@ struct SettingsView: View {
             Section("Developer") {
                 Toggle("Mock generation", isOn: $mockGeneration)
                     .onChange(of: mockGeneration) { Haptics.selection() }
+                if #available(iOS 26.0, *) {
+                    Button("Reset Select Photo tip") {
+                        Haptics.tap()
+                        Task { await SelectPhotoTip().resetEligibility() }
+                    }
+                }
             }
             #endif
             Section {
