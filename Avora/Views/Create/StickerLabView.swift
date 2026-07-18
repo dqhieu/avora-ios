@@ -18,6 +18,7 @@ struct StickerLabView: View {
         enum Status { case processing, done, failed }
     }
 
+    @Environment(\.dismiss) private var dismiss
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var items: [StickerItem] = []
 
@@ -38,6 +39,11 @@ struct StickerLabView: View {
         .navigationTitle("Sticker Lab")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { Haptics.tap(); dismiss() } label: {
+                    Image(systemName: "xmark")
+                }
+            }
             if !items.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     PhotosPicker(selection: $pickerSelection, maxSelectionCount: 16, matching: .images) {

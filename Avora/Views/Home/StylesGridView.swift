@@ -61,7 +61,7 @@ struct StylesGridView: View {
         .sheet(isPresented: $showCredits) {
             NavigationStack { CreditsView().environment(app) }
         }
-        .sheet(isPresented: $showStickerLab) {
+        .fullScreenCover(isPresented: $showStickerLab) {
             NavigationStack { StickerLabView() }
         }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
