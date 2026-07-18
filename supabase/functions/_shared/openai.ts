@@ -18,21 +18,12 @@ export async function runEdit(opts: {
   prompt: string;
   size: string;
   quality: string;
-  model?: string;
-  transparent?: boolean;
 }): Promise<EditResult> {
   const form = new FormData();
-  form.append("model", opts.model ?? "gpt-image-2");
+  form.append("model", "gpt-image-2");
   form.append("prompt", opts.prompt);
   form.append("size", opts.size);
   form.append("quality", opts.quality);
-  // Transparency needs an explicit alpha background and a format that carries one
-  // (png/webp). Only supported by transparency-capable models — gpt-image-2 rejects
-  // it with invalid_value, so the caller pairs this with such a model.
-  if (opts.transparent) {
-    form.append("background", "transparent");
-    form.append("output_format", "png");
-  }
   // The Blob MUST carry a MIME type or the multipart part defaults to
   // application/octet-stream and OpenAI rejects it as unsupported_file_mimetype.
   form.append(

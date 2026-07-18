@@ -5,6 +5,7 @@ struct StylesGridView: View {
     @State private var loadError = false
     @State private var showSettings = false
     @State private var showCredits = false
+    @State private var showStickerLab = false
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -43,8 +44,15 @@ struct StylesGridView: View {
             ToolbarItem(placement: .topBarLeading) {
                 CreditsBalancePill(credits: app.profile?.totalCredits ?? -1) { Haptics.tap(); showCredits = true }
             }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { Haptics.tap(); showStickerLab = true } label: {
+                    ThiingIcon(name: "ActionSticker", size: 32)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { Haptics.tap(); showSettings = true } label: { ThiingIcon(name: "ActionSettings", size: 32) }
+                    .padding(.trailing, -4)
             }
         }
         .sheet(isPresented: $showSettings) {
@@ -52,6 +60,9 @@ struct StylesGridView: View {
         }
         .sheet(isPresented: $showCredits) {
             NavigationStack { CreditsView().environment(app) }
+        }
+        .sheet(isPresented: $showStickerLab) {
+            NavigationStack { StickerLabView() }
         }
         .navigationDestination(for: CreateRoute.self) { CreateView(route: $0) }
         .task { await load() }
