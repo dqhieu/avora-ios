@@ -7,106 +7,110 @@ import PhotosUI
 /// Photos. Intentionally separate from the server-backed styles: no upload, no
 /// credits, no Collection/Community.
 struct StickerLabView: View {
-    @State private var pickerItem: PhotosPickerItem?
-    @State private var source: UIImage?
-    @State private var result: UIImage?
-    @State private var isProcessing = false
-    @State private var failed = false
-    @State private var saved = false
+    /// One picked photo and its independent sticker lifecycle.
+    struct StickerItem: Identifiable {
+        let id = UUID()
+        let source: UIImage
+        var result: UIImage?
+        var status: Status = .processing
+        var saved = false
+
+        enum Status { case processing, done, failed }
+    }
+
+    @State private var pickerSelection: [PhotosPickerItem] = []
+    @State private var items: [StickerItem] = []
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.sm), count: 3)
+
+    private var isProcessing: Bool { items.contains { $0.status == .processing } }
+    private var hasUnsaved: Bool { items.contains { $0.status == .done && !$0.saved } }
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
-            preview
-            controls
-                .padding(.horizontal, Spacing.lg)
+            content
+            if !items.isEmpty {
+                controls
+                    .padding(.horizontal, Spacing.lg)
+            }
         }
         .padding(.vertical, Spacing.lg)
         .navigationTitle("Sticker Lab")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if source != nil {
+            if !items.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
-                    PhotosPicker(selection: $pickerItem, matching: .images) { Text("Pick photo") }
-                        .disabled(isProcessing)
+                    PhotosPicker(selection: $pickerSelection, maxSelectionCount: 16, matching: .images) {
+                        Text("Pick photos")
+                    }
+                    .disabled(isProcessing)
                 }
             }
         }
-        .onChange(of: pickerItem) { _, item in
-            guard let item else { return }
-            Task { await load(item) }
+        .onChange(of: pickerSelection) { _, selection in
+            guard !selection.isEmpty else { return }
+            Task { await load(selection) }
         }
     }
 
-    @ViewBuilder private var preview: some View {
-        ZStack {
-            if let result {
-                Checkerboard()
-                Image(uiImage: result)
-                    .resizable().scaledToFit()
-            } else if let source {
-                Image(uiImage: source)
-                    .resizable().scaledToFit()
-                    .opacity(isProcessing ? 0.4 : 1)
-                    .overlay { if isProcessing { ProgressView() } }
-            } else {
-                PhotosPicker(selection: $pickerItem, matching: .images) {
-                    VStack(spacing: Spacing.sm) {
-                        Image(systemName: "sparkles")
-                            .font(.avoraLargeTitle)
-                        Text("Pick a photo to make a sticker")
-                            .font(.avoraFootnote)
-                            .foregroundStyle(Color.avoraTextTertiary)
-                    }
-                }
-                .buttonStyle(.plain)
+    @ViewBuilder private var content: some View {
+        if items.isEmpty {
+            emptyPrompt
+        } else {
+            grid
+        }
+    }
+
+    private var emptyPrompt: some View {
+        PhotosPicker(selection: $pickerSelection, maxSelectionCount: 16, matching: .images) {
+            VStack(spacing: Spacing.sm) {
+                Image(systemName: "sparkles")
+                    .font(.avoraLargeTitle)
+                Text("Pick photos to make stickers")
+                    .font(.avoraFootnote)
+                    .foregroundStyle(Color.avoraTextTertiary)
             }
         }
+        .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
-        .overlay(alignment: .bottom) {
-            if failed {
-                Text("Couldn’t find a subject. Try another photo.")
-                    .font(.avoraFootnote)
-                    .foregroundStyle(Color.avoraError)
-                    .padding(Spacing.sm)
+    }
+
+    private var grid: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: Spacing.sm) {
+                ForEach($items) { $item in
+                    StickerCell(item: item) { save(item) }
+                }
             }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.top, Spacing.lg)
         }
     }
 
     @ViewBuilder private var controls: some View {
-        AvoraPrimaryButton { Haptics.tap(); save() } label: {
+        AvoraPrimaryButton { Haptics.tap(); saveAll() } label: {
             HStack(spacing: Spacing.xs) {
-                Image(systemName: saved ? "checkmark" : "square.and.arrow.down")
-                Text(saved ? "Saved" : "Save to Photos")
+                Image(systemName: "square.and.arrow.down")
+                Text("Save All to Photos")
             }
         }
-        .disabled(result == nil || saved)
+        .disabled(isProcessing || !hasUnsaved)
     }
 
-    private func load(_ item: PhotosPickerItem) async {
-        result = nil
-        failed = false
-        saved = false
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let img = UIImage(data: data) else { return }
-        source = img
-        isProcessing = true
-        let sticker = await StickerProcessor.makeSticker(from: img)
-        isProcessing = false
-        if let sticker {
-            result = sticker
-            Haptics.success()
-        } else {
-            failed = true
-            Haptics.error()
-        }
-    }
+    // Implemented in later tasks.
+    private func load(_ selection: [PhotosPickerItem]) async {}
+    private func save(_ item: StickerItem) {}
+    private func saveAll() {}
+}
 
-    private func save() {
-        guard let result else { return }
-        UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
-        saved = true
-        ToastWindowManager.shared.show(title: "Saved to Photos")
+/// One grid cell: sticker over checkerboard when done, source + spinner while
+/// processing, or an inline mark when no subject was found. Tapping a done cell saves it.
+private struct StickerCell: View {
+    let item: StickerLabView.StickerItem
+    let onSave: () -> Void
+    var body: some View {
+        Image(uiImage: item.source)
+            .resizable().scaledToFit()
     }
 }
 
