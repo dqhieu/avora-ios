@@ -27,7 +27,7 @@ struct ScanReveal: View {
             let h = geo.size.height
             ZStack(alignment: .top) {
                 if let resultImage {
-                    cardImage(resultImage)
+                    BeforeAfterSlider(before: source, after: resultImage)
                 } else {
                     cardImage(source)
                     if isGenerating {
