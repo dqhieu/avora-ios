@@ -166,8 +166,8 @@ private struct WelcomePageDots: View {
     let app = AppState()
     app.profile = Profile(weeklyCredits: 1000, extraCredits: 0, subscriptionActive: false,
                           subscriptionPeriodEnd: nil, signupBonusSeen: false, username: nil)
-    app.config = CreditConfig(weeklyAmount: 1000, signupExtra: 60, generationCost: 20,
-                              extraPack: 500, costLow: 20, costMedium: 30, costHigh: 120)
+    app.config = CreditConfig(weeklyAmount: 1000, signupExtra: 60,
+                              extraPack: 500, costLow: 10, costMedium: 30, costHigh: 120)
     return WelcomeView(onFinish: {}).environment(app)
 }
 

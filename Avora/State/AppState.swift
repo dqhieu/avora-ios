@@ -67,11 +67,6 @@ final class AppState {
         }
     }
 
-    /// Number of generations buyable with `credits`, using the live config cost.
-    func generations(for credits: Int) -> Int {
-        credits / config.generationCost
-    }
-
     func loadStyles(force: Bool = false) async throws {
         if !force, didFetchStyles { return }
         styles = try await AvoraAPI.shared.fetchStyles()

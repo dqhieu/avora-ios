@@ -3,7 +3,6 @@ import Foundation
 struct CreditConfig: Codable {
     let weeklyAmount: Int
     let signupExtra: Int
-    let generationCost: Int
     let extraPack: Int
     let costLow: Int
     let costMedium: Int
@@ -12,7 +11,6 @@ struct CreditConfig: Codable {
     enum CodingKeys: String, CodingKey {
         case weeklyAmount = "weekly_amount"
         case signupExtra = "signup_extra"
-        case generationCost = "generation_cost"
         case extraPack = "extra_pack"
         case costLow = "cost_low"
         case costMedium = "cost_medium"
@@ -35,7 +33,7 @@ struct CreditConfig: Codable {
     /// once the real `signup_extra` has been fetched from config, so we never show
     /// (and let the user burn) a stale fallback amount.
     static let fallback = CreditConfig(
-        weeklyAmount: 1000, signupExtra: 0, generationCost: 20, extraPack: 500,
-        costLow: 20, costMedium: 30, costHigh: 120
+        weeklyAmount: 1000, signupExtra: 0, extraPack: 500,
+        costLow: 10, costMedium: 30, costHigh: 120
     )
 }

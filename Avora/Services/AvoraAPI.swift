@@ -64,7 +64,7 @@ struct AvoraAPI {
 
     func fetchCreditConfig() async throws -> CreditConfig {
         try await db.from("credit_config")
-            .select("weekly_amount,signup_extra,generation_cost,extra_pack,cost_low,cost_medium,cost_high")
+            .select("weekly_amount,signup_extra,extra_pack,cost_low,cost_medium,cost_high")
             .single()
             .execute()
             .value
