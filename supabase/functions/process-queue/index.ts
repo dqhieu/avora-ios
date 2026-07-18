@@ -40,14 +40,16 @@ Deno.serve(async () => {
       // curated template. size "auto" matches styles.default_size for custom.
       let prompt: string;
       let size: string;
+      let transparent = false;
       if (gen.custom_prompt) {
         prompt = `Restyle this photo: ${gen.custom_prompt}. Preserve the subject's likeness and pose. Do not add text or watermarks.`;
         size = "auto";
       } else {
         const { data: style } = await db.from("styles")
-          .select("prompt_template,default_size").eq("id", gen.style_id).single();
+          .select("prompt_template,default_size,transparent").eq("id", gen.style_id).single();
         prompt = style!.prompt_template;
         size = style!.default_size;
+        transparent = style!.transparent ?? false;
       }
 
       const { data: blob } = await db.storage.from("inputs").download(gen.input_path);
@@ -57,13 +59,17 @@ Deno.serve(async () => {
 
       const result = await runEdit({
         imageBytes: bytes, filename, contentType,
-        prompt, size, quality: gen.quality,
+        prompt, size, quality: gen.quality, transparent,
       });
 
-      const jpeg = await toJpeg(decodeB64(result.b64));
-      const outPath = `${gen.user_id}/${jobId}.jpg`;
-      await db.storage.from("outputs").upload(outPath, jpeg, {
-        contentType: "image/jpeg", upsert: true,
+      // Transparent styles keep the model's PNG (alpha intact); everything else is
+      // re-encoded to JPEG to shrink storage.
+      const raw = decodeB64(result.b64);
+      const outBytes = transparent ? raw : await toJpeg(raw);
+      const ext = transparent ? "png" : "jpg";
+      const outPath = `${gen.user_id}/${jobId}.${ext}`;
+      await db.storage.from("outputs").upload(outPath, outBytes, {
+        contentType: transparent ? "image/png" : "image/jpeg", upsert: true,
       });
 
       await db.from("generations").update({
@@ -107,8 +113,8 @@ function decodeB64(b64: string): Uint8Array {
 }
 
 // Re-encode the PNG returned by the image model as JPEG to shrink stored file size.
-// gpt-image outputs are opaque (no transparent background requested), so dropping
-// the alpha channel is safe.
+// Only opaque (non-transparent) styles take this path, so dropping the alpha channel
+// is safe here; transparent styles keep their PNG upstream.
 async function toJpeg(pngBytes: Uint8Array): Promise<Uint8Array> {
   const img = await Image.decode(pngBytes);
   return await img.encodeJPEG(JPEG_QUALITY);
