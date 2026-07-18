@@ -97,8 +97,48 @@ struct StickerLabView: View {
         .disabled(isProcessing || !hasUnsaved)
     }
 
-    // Implemented in later tasks.
-    private func load(_ selection: [PhotosPickerItem]) async {}
+    /// Loads each picked photo, then runs stickers at most 3 at a time so 16
+    /// simultaneous Vision + Core Image passes don't spike memory. Selection order
+    /// is preserved for display.
+    private func load(_ selection: [PhotosPickerItem]) async {
+        var loaded: [StickerItem] = []
+        for pick in selection {
+            if let data = try? await pick.loadTransferable(type: Data.self),
+               let img = UIImage(data: data) {
+                loaded.append(StickerItem(source: img))
+            }
+        }
+        items = loaded
+        pickerSelection = []
+
+        var firstSuccess = true
+        await withTaskGroup(of: (UUID, UIImage?).self) { group in
+            var next = 0
+            let maxInFlight = 3
+
+            func addTask(_ index: Int) {
+                let item = loaded[index]
+                group.addTask { (item.id, await StickerProcessor.makeSticker(from: item.source)) }
+            }
+
+            while next < loaded.count && next < maxInFlight {
+                addTask(next); next += 1
+            }
+            for await (id, sticker) in group {
+                if let idx = items.firstIndex(where: { $0.id == id }) {
+                    if let sticker {
+                        items[idx].result = sticker
+                        items[idx].status = .done
+                        if firstSuccess { Haptics.success(); firstSuccess = false }
+                    } else {
+                        items[idx].status = .failed
+                    }
+                }
+                if next < loaded.count { addTask(next); next += 1 }
+            }
+        }
+    }
+
     private func save(_ item: StickerItem) {}
     private func saveAll() {}
 }
@@ -108,9 +148,39 @@ struct StickerLabView: View {
 private struct StickerCell: View {
     let item: StickerLabView.StickerItem
     let onSave: () -> Void
+
     var body: some View {
-        Image(uiImage: item.source)
-            .resizable().scaledToFit()
+        ZStack {
+            Checkerboard()
+            switch item.status {
+            case .processing:
+                Image(uiImage: item.source)
+                    .resizable().scaledToFit()
+                    .opacity(0.4)
+                    .overlay { ProgressView() }
+            case .done:
+                if let result = item.result {
+                    Image(uiImage: result)
+                        .resizable().scaledToFit()
+                        .padding(Spacing.xs)
+                }
+            case .failed:
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.avoraFootnote)
+                    .foregroundStyle(Color.avoraError)
+            }
+        }
+        .aspectRatio(1, contentMode: .fill)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        .overlay(alignment: .topTrailing) {
+            if item.saved {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Color.avoraSuccess)
+                    .padding(Spacing.xs)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { if item.status == .done && !item.saved { onSave() } }
     }
 }
 
