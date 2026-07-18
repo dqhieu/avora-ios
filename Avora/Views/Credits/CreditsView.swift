@@ -17,6 +17,7 @@ struct CreditsView: View {
     @State private var showConfirmation = false
     @State private var purchaseError: String?
     @State private var showBreakdown = false
+    @State private var legalPage: LegalPage?
 
     private let cols = [GridItem(.flexible(), spacing: Spacing.md),
                         GridItem(.flexible(), spacing: Spacing.md)]
@@ -60,6 +61,8 @@ struct CreditsView: View {
                     } else if loadFailed {
                         retry
                     }
+
+                    legalFooter
                 }
                 .padding(Spacing.lg)
                 .disabled(busy)
@@ -91,7 +94,28 @@ struct CreditsView: View {
             } message: {
                 Text(purchaseError ?? "")
             }
+            .sheet(item: $legalPage) { page in
+                SafariView(url: page.url).ignoresSafeArea()
+            }
         }
+    }
+
+    private var legalFooter: some View {
+        HStack(spacing: Spacing.sm) {
+            Button("Terms of Service") {
+                Haptics.tap()
+                legalPage = LegalPage(url: AvoraConfig.termsOfServiceURL)
+            }
+            Text("·")
+            Button("Privacy Policy") {
+                Haptics.tap()
+                legalPage = LegalPage(url: AvoraConfig.privacyPolicyURL)
+            }
+        }
+        .buttonStyle(.plain)
+        .font(.avoraCaption)
+        .foregroundStyle(Color.avoraTextSecondary)
+        .padding(.top, Spacing.sm)
     }
 
     private var balanceHeader: some View {

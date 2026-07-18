@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var isRestoring = false
     @State private var isSigningOut = false
     @State private var isDeleting = false
+    @State private var legalPage: LegalPage?
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     #if DEBUG
     @AppStorage(AvoraConfig.mockGenerationKey) private var mockGeneration = false
@@ -63,6 +64,16 @@ struct SettingsView: View {
                 }
                 .disabled(isSigningOut)
             }
+            Section("About") {
+                Button("Privacy Policy") {
+                    Haptics.tap()
+                    legalPage = LegalPage(url: AvoraConfig.privacyPolicyURL)
+                }
+                Button("Terms of Service") {
+                    Haptics.tap()
+                    legalPage = LegalPage(url: AvoraConfig.termsOfServiceURL)
+                }
+            }
             #if DEBUG
             Section("Developer") {
                 Toggle("Mock generation", isOn: $mockGeneration)
@@ -96,6 +107,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $editingUsername) {
             EditUsernameSheet(current: app.profile?.username ?? "")
+        }
+        .sheet(item: $legalPage) { page in
+            SafariView(url: page.url).ignoresSafeArea()
         }
         .alert("Error", isPresented: Binding(
             get: { deleteError != nil },
