@@ -13,7 +13,7 @@ struct StickerLabView: View {
         let source: UIImage
         var result: UIImage?
         var status: Status = .processing
-        var saved = false
+        var selected = false
 
         enum Status { case processing, done, failed }
     }
@@ -24,7 +24,7 @@ struct StickerLabView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.sm), count: 3)
 
     private var isProcessing: Bool { items.contains { $0.status == .processing } }
-    private var hasUnsaved: Bool { items.contains { $0.status == .done && !$0.saved } }
+    private var selectedCount: Int { items.filter { $0.selected }.count }
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
@@ -79,7 +79,7 @@ struct StickerLabView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: Spacing.sm) {
                 ForEach($items) { $item in
-                    StickerCell(item: item) { save(item) }
+                    StickerCell(item: item) { toggle(item) }
                 }
             }
             .padding(.horizontal, Spacing.lg)
@@ -88,13 +88,13 @@ struct StickerLabView: View {
     }
 
     @ViewBuilder private var controls: some View {
-        AvoraPrimaryButton { Haptics.tap(); saveAll() } label: {
+        AvoraPrimaryButton { Haptics.tap(); saveSelected() } label: {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: "square.and.arrow.down")
-                Text("Save All to Photos")
+                Text("Save \(selectedCount) to Photos")
             }
         }
-        .disabled(isProcessing || !hasUnsaved)
+        .disabled(isProcessing || selectedCount == 0)
     }
 
     /// Loads each picked photo, then runs stickers at most 3 at a time so 16
@@ -129,6 +129,7 @@ struct StickerLabView: View {
                     if let sticker {
                         items[idx].result = sticker
                         items[idx].status = .done
+                        items[idx].selected = true
                         if firstSuccess { Haptics.success(); firstSuccess = false }
                     } else {
                         items[idx].status = .failed
@@ -139,37 +140,34 @@ struct StickerLabView: View {
         }
     }
 
-    /// Saves one sticker and marks it saved.
-    private func save(_ item: StickerItem) {
-        guard let result = item.result,
-              let idx = items.firstIndex(where: { $0.id == item.id }),
-              !items[idx].saved else { return }
-        UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
-        items[idx].saved = true
-        Haptics.success()
-        ToastWindowManager.shared.show(title: "Saved to Photos")
+    /// Toggles whether a finished sticker is included in the save.
+    private func toggle(_ item: StickerItem) {
+        guard item.status == .done,
+              let idx = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[idx].selected.toggle()
+        Haptics.tap()
     }
 
-    /// Saves every finished sticker not yet saved and reports the count.
-    private func saveAll() {
-        let pending = items.indices.filter { items[$0].status == .done && !items[$0].saved }
-        guard !pending.isEmpty else { return }
-        for idx in pending {
+    /// Saves every selected sticker and reports the count.
+    private func saveSelected() {
+        let chosen = items.indices.filter { items[$0].selected }
+        guard !chosen.isEmpty else { return }
+        for idx in chosen {
             if let result = items[idx].result {
                 UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
-                items[idx].saved = true
             }
         }
-        let count = pending.count
+        let count = chosen.count
         ToastWindowManager.shared.show(title: count == 1 ? "Saved 1 sticker to Photos" : "Saved \(count) stickers to Photos")
     }
 }
 
 /// One grid cell: sticker over checkerboard when done, source + spinner while
-/// processing, or an inline mark when no subject was found. Tapping a done cell saves it.
+/// processing, or an inline mark when no subject was found. Tapping a done cell
+/// toggles whether it's included in the save.
 private struct StickerCell: View {
     let item: StickerLabView.StickerItem
-    let onSave: () -> Void
+    let onToggle: () -> Void
 
     var body: some View {
         ZStack {
@@ -185,6 +183,7 @@ private struct StickerCell: View {
                     Image(uiImage: result)
                         .resizable().scaledToFit()
                         .padding(Spacing.xs)
+                        .opacity(item.selected ? 1 : 0.4)
                 }
             case .failed:
                 Image(systemName: "exclamationmark.triangle")
@@ -195,14 +194,14 @@ private struct StickerCell: View {
         .aspectRatio(1, contentMode: .fill)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         .overlay(alignment: .topTrailing) {
-            if item.saved {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.avoraSuccess)
+            if item.status == .done {
+                Image(systemName: item.selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(item.selected ? Color.avoraSuccess : Color.avoraTextTertiary)
                     .padding(Spacing.xs)
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { if item.status == .done && !item.saved { onSave() } }
+        .onTapGesture { if item.status == .done { onToggle() } }
     }
 }
 
