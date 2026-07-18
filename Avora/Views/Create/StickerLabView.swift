@@ -139,8 +139,30 @@ struct StickerLabView: View {
         }
     }
 
-    private func save(_ item: StickerItem) {}
-    private func saveAll() {}
+    /// Saves one sticker and marks it saved.
+    private func save(_ item: StickerItem) {
+        guard let result = item.result,
+              let idx = items.firstIndex(where: { $0.id == item.id }),
+              !items[idx].saved else { return }
+        UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
+        items[idx].saved = true
+        Haptics.success()
+        ToastWindowManager.shared.show(title: "Saved to Photos")
+    }
+
+    /// Saves every finished sticker not yet saved and reports the count.
+    private func saveAll() {
+        let pending = items.indices.filter { items[$0].status == .done && !items[$0].saved }
+        guard !pending.isEmpty else { return }
+        for idx in pending {
+            if let result = items[idx].result {
+                UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
+                items[idx].saved = true
+            }
+        }
+        let count = pending.count
+        ToastWindowManager.shared.show(title: count == 1 ? "Saved 1 sticker to Photos" : "Saved \(count) stickers to Photos")
+    }
 }
 
 /// One grid cell: sticker over checkerboard when done, source + spinner while
