@@ -49,7 +49,7 @@ struct CreateView: View {
     var body: some View {
         VStack(spacing: Spacing.lg) {
             photoArea
-            if isCustom && !hasResults {
+            if isCustom && !hasResults && !isWorking {
                 promptField
                     .padding(.horizontal, Spacing.lg)
             }
@@ -60,7 +60,7 @@ struct CreateView: View {
         .navigationTitle(style.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !hasResults {
+            if !hasResults && !isWorking {
                 ToolbarItem(placement: .topBarTrailing) {
                     PhotosPicker(selection: $pickerItems, maxSelectionCount: 4, matching: .images) {
                         Text("Select photo")
