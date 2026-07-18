@@ -97,31 +97,32 @@ struct StickerLabView: View {
         .disabled(isProcessing || selectedCount == 0)
     }
 
-    /// Loads each picked photo, then runs stickers at most 3 at a time so 16
+    /// Shows each picked photo as soon as it decodes (so the grid fills in instead
+    /// of waiting for the whole batch), then runs stickers at most 3 at a time so 16
     /// simultaneous Vision + Core Image passes don't spike memory. Selection order
     /// is preserved for display.
     private func load(_ selection: [PhotosPickerItem]) async {
-        var loaded: [StickerItem] = []
+        items = []
         for pick in selection {
             if let data = try? await pick.loadTransferable(type: Data.self),
                let img = UIImage(data: data) {
-                loaded.append(StickerItem(source: img))
+                items.append(StickerItem(source: img))
             }
         }
-        items = loaded
         pickerSelection = []
 
+        let sources = items.map { ($0.id, $0.source) }
         var firstSuccess = true
         await withTaskGroup(of: (UUID, UIImage?).self) { group in
             var next = 0
             let maxInFlight = 3
 
             func addTask(_ index: Int) {
-                let item = loaded[index]
-                group.addTask { (item.id, await StickerProcessor.makeSticker(from: item.source)) }
+                let (id, source) = sources[index]
+                group.addTask { (id, await StickerProcessor.makeSticker(from: source)) }
             }
 
-            while next < loaded.count && next < maxInFlight {
+            while next < sources.count && next < maxInFlight {
                 addTask(next); next += 1
             }
             for await (id, sticker) in group {
@@ -135,7 +136,7 @@ struct StickerLabView: View {
                         items[idx].status = .failed
                     }
                 }
-                if next < loaded.count { addTask(next); next += 1 }
+                if next < sources.count { addTask(next); next += 1 }
             }
         }
     }
